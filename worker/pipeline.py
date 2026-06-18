@@ -1,0 +1,53 @@
+import logging
+from typing import Callable
+
+from apscheduler.schedulers.background import BackgroundScheduler
+
+from core.db import init_db
+from core.fila import dequeue, complete_job, fail_job
+
+logger = logging.getLogger(__name__)
+
+_JOB_HANDLERS: dict[str, Callable] = {}
+
+
+def register_handler(tipo: str, fn: Callable) -> None:
+    _JOB_HANDLERS[tipo] = fn
+
+
+def run_once() -> int:
+    processed = 0
+    while True:
+        job = dequeue()
+        if job is None:
+            break
+        handler = _JOB_HANDLERS.get(job.tipo)
+        if handler is None:
+            fail_job(job.id, f"sem handler para tipo {job.tipo}")
+            continue
+        try:
+            resultado = handler(job.payload)
+            complete_job(job.id, resultado or {})
+            processed += 1
+        except Exception as e:
+            logger.error(f"job {job.id} falhou: {e}")
+            fail_job(job.id, str(e))
+    return processed
+
+
+def schedule_jobs() -> BackgroundScheduler:
+    init_db()
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(run_once, "interval", minutes=1, id="process_queue")
+    scheduler.start()
+    return scheduler
+
+
+def run_daemon() -> None:
+    scheduler = schedule_jobs()
+    try:
+        import time
+        while True:
+            time.sleep(60)
+    except (KeyboardInterrupt, SystemExit):
+        scheduler.shutdown(wait=False)
