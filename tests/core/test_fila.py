@@ -1,16 +1,5 @@
 import pytest
-from core.config import get_settings
-from core.db import init_db
 from core.fila import enqueue, dequeue, complete_job, fail_job, list_pending
-
-
-@pytest.fixture
-def db(tmp_path, monkeypatch):
-    db_path = str(tmp_path / "test.db")
-    monkeypatch.setenv("DB_PATH", db_path)
-    get_settings.cache_clear()
-    init_db(db_path)
-    return db_path
 
 
 def test_enqueue_returns_id(db):

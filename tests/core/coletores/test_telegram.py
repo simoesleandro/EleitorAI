@@ -1,20 +1,13 @@
 import pytest
-from unittest.mock import patch, MagicMock
-from core.db import init_db
+from unittest.mock import MagicMock
 from core.coletores.telegram import _to_mencao
 from core.modelos import Mencao
 
 
-@pytest.fixture
-def db(tmp_path, monkeypatch):
-    from core.config import get_settings
-    get_settings.cache_clear()
-    db_path = str(tmp_path / "test.db")
-    monkeypatch.setenv("DB_PATH", db_path)
-    init_db(db_path)
+@pytest.fixture(autouse=True)
+def telegram_env(monkeypatch):
     monkeypatch.setenv("TELEGRAM_API_ID", "11111")
     monkeypatch.setenv("TELEGRAM_API_HASH", "hash")
-    return db_path
 
 
 def test_to_mencao_mapeia_mensagem_telegram(db):

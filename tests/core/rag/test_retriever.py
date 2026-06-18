@@ -1,18 +1,7 @@
 import pytest
 from unittest.mock import patch
-from core.db import init_db
 from core.rag.embeddings import indexar
 from core.rag.retriever import buscar
-
-
-@pytest.fixture
-def db(tmp_path, monkeypatch):
-    from core.config import get_settings
-    get_settings.cache_clear()
-    db_path = str(tmp_path / "test.db")
-    monkeypatch.setenv("DB_PATH", db_path)
-    init_db(db_path)
-    return db_path
 
 
 def test_buscar_hybrid_combina_keyword_e_semantico(db):

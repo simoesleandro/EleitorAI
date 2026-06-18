@@ -1,18 +1,7 @@
 import pytest
-from unittest.mock import patch, MagicMock
-from core.db import init_db
+from unittest.mock import patch
 from core.coletores.youtube import coletar_transcricao, salvar_mencao, _hash_conteudo
 from core.modelos import Mencao
-
-
-@pytest.fixture
-def db(tmp_path, monkeypatch):
-    from core.config import get_settings
-    get_settings.cache_clear()
-    db_path = str(tmp_path / "test.db")
-    monkeypatch.setenv("DB_PATH", db_path)
-    init_db(db_path)
-    return db_path
 
 
 @pytest.fixture
