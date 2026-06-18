@@ -23,6 +23,7 @@ def client(monkeypatch, tmp_path):
     conn.close()
     app = create_app()
     app.config["TESTING"] = True
+    app.config["WTF_CSRF_ENABLED"] = False
     with app.test_client() as c:
         yield c
 
@@ -51,3 +52,20 @@ def test_login_post_user_not_found(client):
 def test_logout_redirects(client):
     resp = client.post("/logout", follow_redirects=False)
     assert resp.status_code in (302, 301)
+
+
+def test_login_post_without_csrf_token_is_rejected(monkeypatch, tmp_path):
+    from core.config import get_settings
+    from app import create_app
+
+    get_settings.cache_clear()
+    monkeypatch.setenv("DB_PATH", str(tmp_path / "test.db"))
+    monkeypatch.setenv("SECRET_KEY", "test-secret")
+    from core.db import init_db
+
+    init_db(str(tmp_path / "test.db"))
+    app = create_app()
+    app.config["TESTING"] = True
+    with app.test_client() as c:
+        resp = c.post("/login", data={"username": "admin", "password": "x"}, follow_redirects=False)
+    assert resp.status_code == 400
