@@ -1,5 +1,3 @@
-import pytest
-import respx
 from veritas.ferramentas.tse import buscar_tse, _query_candidatos
 
 

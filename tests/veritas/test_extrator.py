@@ -1,4 +1,3 @@
-import pytest
 from unittest.mock import patch
 from veritas.agentes.extrator import extrair_claims
 from core.modelos import ClaimExtraida

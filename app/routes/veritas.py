@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, Response, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, Response
 
 from core.db import get_db
 from core.fila import enqueue
@@ -64,5 +64,5 @@ def novo():
     payload = {"conteudo": conteudo}
     if mencao_id:
         payload["mencao_id"] = int(mencao_id)
-    job_id = enqueue("veritas", "veritas_check", payload)
+    enqueue("veritas", "veritas_check", payload)
     return redirect(url_for("veritas.lista"))

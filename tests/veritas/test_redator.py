@@ -1,4 +1,3 @@
-import pytest
 from veritas.agentes.redator import gerar_dossie_md
 from core.modelos import ClaimExtraida, Evidencia, ResultadoVerificacao
 

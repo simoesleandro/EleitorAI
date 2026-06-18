@@ -1,5 +1,3 @@
-import pytest
-from pathlib import Path
 from unittest.mock import patch
 from veritas.scrapers.lupa import scraper_lupa, parse_lupa_page
 from core.modelos import FactCheck

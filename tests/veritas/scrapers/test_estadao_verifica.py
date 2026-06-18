@@ -1,4 +1,3 @@
-import pytest
 from unittest.mock import patch
 from veritas.scrapers.estadao_verifica import scraper_estadao_verifica, parse_estadao_verifica_page
 from core.modelos import FactCheck

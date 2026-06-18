@@ -1,9 +1,7 @@
 import logging
-from typing import Optional
 
 import httpx
 
-from core.modelos import Evidencia
 
 logger = logging.getLogger(__name__)
 IBGE_BASE = "https://servicodados.ibge.gov.br/api/v1"

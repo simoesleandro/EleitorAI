@@ -1,5 +1,3 @@
-import pytest
-import respx
 from veritas.ferramentas.tesouro import buscar_tesouro, _query_receitas
 
 

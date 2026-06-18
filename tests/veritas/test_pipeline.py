@@ -1,4 +1,3 @@
-import pytest
 from unittest.mock import patch
 from veritas.pipeline import rodar_veritas
 from core.modelos import ClaimExtraida, Evidencia, ResultadoVerificacao

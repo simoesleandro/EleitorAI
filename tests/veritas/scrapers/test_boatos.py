@@ -1,4 +1,3 @@
-import pytest
 from unittest.mock import patch
 from veritas.scrapers.boatos import scraper_boatos, parse_boatos_page
 from core.modelos import FactCheck

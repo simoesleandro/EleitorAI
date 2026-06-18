@@ -1,6 +1,3 @@
-import pytest
-import respx
-import httpx
 from veritas.ferramentas.ibge import buscar_ibge, _query_populacao
 
 

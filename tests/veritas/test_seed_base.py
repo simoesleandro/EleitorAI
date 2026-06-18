@@ -1,5 +1,4 @@
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from veritas.seed_base import seed_base_fatos
 from core.modelos import FactCheck
 

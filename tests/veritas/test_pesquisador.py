@@ -1,4 +1,3 @@
-import pytest
 from unittest.mock import patch
 from veritas.agentes.pesquisador import pesquisar_evidencias, TOOL_REGISTRY
 from core.modelos import ClaimExtraida, Evidencia

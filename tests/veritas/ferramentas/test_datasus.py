@@ -1,5 +1,3 @@
-import pytest
-import respx
 from veritas.ferramentas.datasus import buscar_datasus, _query_mortalidade
 
 

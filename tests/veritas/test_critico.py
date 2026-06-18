@@ -1,4 +1,3 @@
-import pytest
 from unittest.mock import patch
 from veritas.agentes.critico import revisar_checagem, RevisaoCritica
 from core.modelos import ClaimExtraida, Evidencia, ResultadoVerificacao

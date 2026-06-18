@@ -1,4 +1,3 @@
-import pytest
 from unittest.mock import patch
 from worker.jobs_veritas import job_veritas_check
 

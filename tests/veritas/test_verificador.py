@@ -1,4 +1,3 @@
-import pytest
 from unittest.mock import patch
 from veritas.agentes.verificador import verificar_claim
 from core.modelos import ClaimExtraida, Evidencia, ResultadoVerificacao

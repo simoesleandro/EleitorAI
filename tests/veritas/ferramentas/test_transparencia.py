@@ -1,5 +1,3 @@
-import pytest
-import respx
 from veritas.ferramentas.transparencia import buscar_transparencia, _query_despesas
 
 
