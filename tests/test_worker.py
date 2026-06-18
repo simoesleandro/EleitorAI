@@ -64,3 +64,26 @@ def test_recover_stuck_jobs_keeps_recent_running(db):
     row = conn.execute("SELECT status FROM job_queue WHERE id=?", (recent_id,)).fetchone()
     conn.close()
     assert row["status"] == "running"
+
+
+def test_recover_stuck_jobs_finds_python_written_timestamps(db):
+    from core.db import get_db
+    from core.fila import dequeue, _now
+
+    enqueue("veritas", "veritas_check", {})
+    job = dequeue()
+    assert job is not None
+    assert job.iniciado_em is not None
+    assert "T" not in job.iniciado_em, f"esperado formato SQL, got {job.iniciado_em!r}"
+
+    conn = get_db(db_path=db)
+    one_hour_ago = _now()
+    conn.execute(
+        "UPDATE job_queue SET iniciado_em = datetime(?, '-1 hour') WHERE id = ?",
+        (one_hour_ago, job.id),
+    )
+    conn.commit()
+    conn.close()
+
+    recovered = recover_stuck_jobs(timeout_minutes=30)
+    assert recovered == 1

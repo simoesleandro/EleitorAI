@@ -30,7 +30,7 @@ def dequeue() -> Optional[Job]:
         if row is None:
             conn.execute("ROLLBACK")
             return None
-        now = datetime.now().isoformat()
+        now = _now()
         conn.execute(
             "UPDATE job_queue SET status='running', iniciado_em=? WHERE id=?",
             (now, row["id"]),
@@ -45,7 +45,7 @@ def dequeue() -> Optional[Job]:
 def complete_job(job_id: int, resultado: dict) -> None:
     conn = get_db()
     try:
-        now = datetime.now().isoformat()
+        now = _now()
         conn.execute(
             "UPDATE job_queue SET status='done', resultado=?, concluido_em=? WHERE id=?",
             (json.dumps(resultado, ensure_ascii=False), now, job_id),
@@ -58,7 +58,7 @@ def complete_job(job_id: int, resultado: dict) -> None:
 def fail_job(job_id: int, erro: str) -> None:
     conn = get_db()
     try:
-        now = datetime.now().isoformat()
+        now = _now()
         conn.execute(
             "UPDATE job_queue SET status='failed', resultado=?, concluido_em=? WHERE id=?",
             (json.dumps({"erro": erro}, ensure_ascii=False), now, job_id),
@@ -87,6 +87,10 @@ def list_pending() -> list[Job]:
         return [_row_to_job(r) for r in cursor.fetchall()]
     finally:
         conn.close()
+
+
+def _now() -> str:
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
 def _row_to_job(row) -> Job:
