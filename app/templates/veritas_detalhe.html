@@ -13,5 +13,6 @@
 </dl>
 <h2>Evidencias</h2>
 <pre>{{ checagem.evidencias }}</pre>
-<p><a href="{{ url_for('veritas.pdf', checagem_id=checagem.id) }}">Baixar PDF</a></p>
+<!-- PDF generation requires WeasyPrint, deferred to Linux deploy -->
+<!-- <p><a href="{{ url_for('veritas.pdf', checagem_id=checagem.id) }}">Baixar PDF</a></p> -->
 {% endblock %}

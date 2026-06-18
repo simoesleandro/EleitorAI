@@ -49,7 +49,10 @@ def pdf(checagem_id):
     if not row:
         return "nao encontrado", 404
     md = f"# Checagem #{row['id']}\n\nVeredito: {row['veredito']}\n\n{row['justificativa']}"
-    pdf_bytes = gerar_dossie_pdf(md)
+    try:
+        pdf_bytes = gerar_dossie_pdf(md)
+    except NotImplementedError as e:
+        return str(e), 501
     return Response(pdf_bytes, mimetype="application/pdf",
                     headers={"Content-Disposition": f"attachment; filename=dossie_{checagem_id}.pdf"})
 
