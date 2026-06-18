@@ -1,0 +1,24 @@
+app = "eleitorai"
+primary_region = "gru"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[http_service]
+  internal_port = 5090
+  force_https = true
+  auto_stop_machines = false
+  min_machines_running = 1
+
+[processes]
+  web = "python -m app"
+  worker = "python -m worker --daemon"
+
+[[services]]
+  processes = ["web"]
+  protocol = "tcp"
+  internal_port = 5090
+
+[mounts]
+  source = "eleitorai_data"
+  destination = "/data"

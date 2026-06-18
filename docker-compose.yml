@@ -1,0 +1,23 @@
+version: "3.9"
+services:
+  web:
+    build: .
+    command: python -m app
+    ports:
+      - "5090:5090"
+    volumes:
+      - ./data:/data
+      - ./:/app
+    env_file: .env
+    restart: unless-stopped
+
+  worker:
+    build: .
+    command: python -m worker --daemon
+    volumes:
+      - ./data:/data
+      - ./:/app
+    env_file: .env
+    restart: unless-stopped
+    depends_on:
+      - web
