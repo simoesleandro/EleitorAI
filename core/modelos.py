@@ -92,3 +92,33 @@ class Fonte(BaseModel):
     config: dict[str, Any] = Field(default_factory=dict)
     ultimo_coleta: Optional[str] = None
     id: Optional[int] = None
+
+
+class FactCheck(BaseModel):
+    titulo: str
+    veiculo: str
+    url: str
+    data: str
+    veredito_original: str
+    claim_checada: str
+    explicacao: str
+    fontes_agencia: list[str] = Field(default_factory=list)
+    id: Optional[int] = None
+
+
+class ClaimExtraida(BaseModel):
+    texto: str
+    sujeito: Optional[str] = None
+    predicado: Optional[str] = None
+    checavel: bool = True
+    confianca: float = Field(ge=0.0, le=1.0)
+    id: Optional[int] = None
+
+
+class ResultadoVerificacao(BaseModel):
+    veredito: Veredito
+    evidencias: list[Evidencia]
+    fontes_independentes: int
+    confianca: float = Field(ge=0.0, le=1.0)
+    justificativa: str
+    contraposicao_sugerida: str
