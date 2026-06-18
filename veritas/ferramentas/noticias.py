@@ -14,12 +14,27 @@ FEEDS = [
 
 def buscar_noticias(query: str, k: int = 5) -> list[dict]:
     resultados = []
+    query_lower = query.lower()
     for feed_url in FEEDS:
         try:
-            resultados.append({"fonte": "Noticias", "dados": _parse_feed(feed_url)})
+            feed = feedparser.parse(feed_url)
         except Exception as e:
             logger.warning(f"Noticias feed {feed_url} falhou: {e}")
-    return resultados[:k]
+            continue
+        for entry in feed.entries[: k * 2]:
+            titulo = getattr(entry, "title", "")
+            summary = getattr(entry, "summary", "")
+            if query_lower in titulo.lower() or query_lower in summary.lower():
+                resultados.append({
+                    "fonte": "Noticias",
+                    "titulo": titulo,
+                    "url": getattr(entry, "link", ""),
+                    "data": getattr(entry, "published", ""),
+                    "resumo": summary,
+                })
+                if len(resultados) >= k:
+                    return resultados
+    return resultados
 
 
 def _parse_feed(url: str) -> list[dict]:
