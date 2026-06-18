@@ -1,0 +1,66 @@
+import logging
+from typing import Optional
+
+import httpx
+from bs4 import BeautifulSoup
+
+from core.modelos import FactCheck
+
+logger = logging.getLogger(__name__)
+BASE_URL = "https://agencialupa.com.br"
+
+
+def scraper_lupa(max_pages: int = 50) -> list[FactCheck]:
+    all_facts = []
+    for page in range(1, max_pages + 1):
+        url = f"{BASE_URL}/page/{page}"
+        html = _fetch(url)
+        if not html:
+            break
+        facts = parse_lupa_page(html, base_url=BASE_URL)
+        if not facts:
+            break
+        all_facts.extend(facts)
+    return all_facts
+
+
+def _fetch(url: str) -> str:
+    try:
+        resp = httpx.get(url, timeout=30, follow_redirects=True)
+        return resp.text if resp.status_code == 200 else ""
+    except Exception as e:
+        logger.warning(f"fetch {url} falhou: {e}")
+        return ""
+
+
+def parse_lupa_page(html: str, base_url: str) -> list[FactCheck]:
+    soup = BeautifulSoup(html, "lxml")
+    facts = []
+    for article in soup.select("article.fact-check, article"):
+        title_a = article.select_one("h2 a, h3 a")
+        if not title_a:
+            continue
+        href = title_a.get("href", "")
+        url = href if href.startswith("http") else f"{base_url}{href}"
+        title = title_a.get_text(strip=True)
+
+        verdict_el = article.select_one(".verdict, .veredito, [class*=verdict]")
+        verdict = verdict_el.get_text(strip=True) if verdict_el else ""
+
+        time_el = article.select_one("time")
+        data = time_el.get("datetime", "") if time_el else ""
+
+        claim_el = article.select_one(".claim, .resumo")
+        claim = claim_el.get_text(strip=True) if claim_el else title
+
+        expl_el = article.select_one(".explanation, .explicacao, p")
+        expl = expl_el.get_text(strip=True) if expl_el else ""
+
+        sources = [li.get_text(strip=True) for li in article.select(".sources li, .fontes li")]
+
+        facts.append(FactCheck(
+            titulo=title, veiculo="Lupa", url=url, data=data,
+            veredito_original=verdict, claim_checada=claim,
+            explicacao=expl, fontes_agencia=sources,
+        ))
+    return facts
