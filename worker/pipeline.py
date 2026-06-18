@@ -6,6 +6,8 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from core.db import get_db, init_db
 from core.fila import dequeue, complete_job, fail_job
 
+from worker.jobs_veritas import job_veritas_check, job_veritas_seed, job_veritas_atualiza_base
+
 logger = logging.getLogger(__name__)
 
 _JOB_HANDLERS: dict[str, Callable] = {}
@@ -13,6 +15,11 @@ _JOB_HANDLERS: dict[str, Callable] = {}
 
 def register_handler(tipo: str, fn: Callable) -> None:
     _JOB_HANDLERS[tipo] = fn
+
+
+register_handler("veritas_check", job_veritas_check)
+register_handler("veritas_seed", job_veritas_seed)
+register_handler("veritas_atualiza_base", job_veritas_atualiza_base)
 
 
 def recover_stuck_jobs(timeout_minutes: int = 30) -> int:
