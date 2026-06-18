@@ -1,4 +1,5 @@
 from functools import lru_cache
+from typing import Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -10,8 +11,8 @@ class Settings(BaseSettings):
     telegram_chat_id: str = ""
     telegram_api_id: int = 0
     telegram_api_hash: str = ""
-    admin_pass: str = "eleitorai2026"
-    secret_key: str = "dev-secret-change-me"
+    admin_pass: Optional[str] = None
+    secret_key: Optional[str] = None
     db_path: str = "data/eleitorai.db"
     langfuse_public_key: str = ""
     langfuse_secret_key: str = ""

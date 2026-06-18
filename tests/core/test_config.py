@@ -29,3 +29,17 @@ def test_get_settings_returns_cached_instance(monkeypatch):
     s1 = get_settings()
     s2 = get_settings()
     assert s1 is s2
+
+
+def test_settings_admin_pass_optional_by_default(monkeypatch):
+    get_settings.cache_clear()
+    monkeypatch.delenv("ADMIN_PASS", raising=False)
+    settings = Settings()
+    assert settings.admin_pass is None
+
+
+def test_settings_secret_key_optional_by_default(monkeypatch):
+    get_settings.cache_clear()
+    monkeypatch.delenv("SECRET_KEY", raising=False)
+    settings = Settings()
+    assert settings.secret_key is None
