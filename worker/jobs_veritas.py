@@ -3,12 +3,14 @@ import logging
 from typing import Any
 
 from core.db import get_db
-from core.modelos import Alerta, ClaimExtraida, ResultadoVerificacao
+from core.modelos import Alerta
 from core.notifier import enviar_alerta
 from veritas.pipeline import rodar_veritas, VeritasState
 from veritas.seed_base import seed_base_fatos
 
 logger = logging.getLogger(__name__)
+
+AD_HOC_MENCAO_TEXTO = "[ad-hoc] Veritas check"
 
 
 def job_veritas_check(payload: dict[str, Any]) -> dict:
@@ -28,7 +30,34 @@ def job_veritas_atualiza_base(payload: dict[str, Any]) -> dict:
     return seed_base_fatos()
 
 
+def _get_or_create_ad_hoc_mencao_id() -> int:
+    conn = get_db()
+    try:
+        row = conn.execute(
+            "SELECT id FROM mencoes WHERE texto=? LIMIT 1",
+            (AD_HOC_MENCAO_TEXTO,),
+        ).fetchone()
+        if row:
+            return row["id"]
+        fonte = conn.execute("SELECT id FROM fontes ORDER BY id LIMIT 1").fetchone()
+        candidato = conn.execute("SELECT id FROM candidatos ORDER BY id LIMIT 1").fetchone()
+        if not fonte or not candidato:
+            raise RuntimeError("schema vazia: popule fontes e candidatos antes de usar ad-hoc")
+        cursor = conn.execute(
+            """INSERT INTO mencoes (fonte_id, candidato_id, texto, autor, autor_id, timestamp, url, metricas, hash_conteudo)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (fonte["id"], candidato["id"], AD_HOC_MENCAO_TEXTO, "sistema", "0",
+             "1970-01-01T00:00:00", "", "{}", "ad-hoc-veritas"),
+        )
+        conn.commit()
+        return cursor.lastrowid
+    finally:
+        conn.close()
+
+
 def _salvar_checagens(state: VeritasState, mencao_id: int | None) -> None:
+    if mencao_id is None:
+        mencao_id = _get_or_create_ad_hoc_mencao_id()
     conn = get_db()
     try:
         for claim, rv in state.get("checagens", []):
