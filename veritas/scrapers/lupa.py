@@ -1,10 +1,10 @@
 import logging
 from typing import Optional
 
-import httpx
 from bs4 import BeautifulSoup
 
 from core.modelos import FactCheck
+from veritas.scrapers import fetch
 
 logger = logging.getLogger(__name__)
 BASE_URL = "https://agencialupa.com.br"
@@ -14,7 +14,7 @@ def scraper_lupa(max_pages: int = 50) -> list[FactCheck]:
     all_facts = []
     for page in range(1, max_pages + 1):
         url = f"{BASE_URL}/page/{page}"
-        html = _fetch(url)
+        html = fetch(url)
         if not html:
             break
         facts = parse_lupa_page(html, base_url=BASE_URL)
@@ -22,15 +22,6 @@ def scraper_lupa(max_pages: int = 50) -> list[FactCheck]:
             break
         all_facts.extend(facts)
     return all_facts
-
-
-def _fetch(url: str) -> str:
-    try:
-        resp = httpx.get(url, timeout=30, follow_redirects=True)
-        return resp.text if resp.status_code == 200 else ""
-    except Exception as e:
-        logger.warning(f"fetch {url} falhou: {e}")
-        return ""
 
 
 def parse_lupa_page(html: str, base_url: str) -> list[FactCheck]:

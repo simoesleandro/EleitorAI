@@ -40,6 +40,6 @@ def test_scraper_lupa_agrupa_multiplas_paginas(monkeypatch):
             if u == url:
                 return html
         return ""
-    with patch("veritas.scrapers.lupa._fetch", side_effect=fake_fetch):
+    with patch("veritas.scrapers.lupa.fetch", side_effect=fake_fetch):
         facts = scraper_lupa(max_pages=5)
     assert len(facts) == 2
