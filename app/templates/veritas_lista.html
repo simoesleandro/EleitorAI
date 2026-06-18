@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Veritas - Checagens{% endblock %}
+{% block content %}
+<h1>Veritas</h1>
+<p><a href="{{ url_for('dashboard.index') }}">Voltar ao dashboard</a></p>
+<section>
+    <h2>Ultimas checagens</h2>
+    {% if checagens %}
+    <table>
+        <thead>
+            <tr><th>ID</th><th>Veredito</th><th>Confianca</th><th>Claim</th><th>Data</th><th>Detalhe</th></tr>
+        </thead>
+        <tbody>
+            {% for c in checagens %}
+            <tr>
+                <td>{{ c.id }}</td>
+                <td>{{ c.veredito }}</td>
+                <td>{{ "%.0f"|format(c.confianca * 100) }}%</td>
+                <td>{{ c.claim[:80] }}{% if c.claim|length > 80 %}...{% endif %}</td>
+                <td>{{ c.criado_em }}</td>
+                <td><a href="{{ url_for('veritas.detalhe', checagem_id=c.id) }}">ver</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>Nenhuma checagem registrada ainda.</p>
+    {% endif %}
+</section>
+{% endblock %}

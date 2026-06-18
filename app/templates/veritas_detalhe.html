@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Checagem #{{ checagem.id }}{% endblock %}
+{% block content %}
+<h1>Checagem #{{ checagem.id }}</h1>
+<p><a href="{{ url_for('veritas.lista') }}">Voltar para lista</a></p>
+<dl>
+    <dt>Veredito</dt><dd>{{ checagem.veredito }}</dd>
+    <dt>Confianca</dt><dd>{{ "%.0f"|format(checagem.confianca * 100) }}%</dd>
+    <dt>Claim</dt><dd>{{ checagem.claim }}</dd>
+    <dt>Justificativa</dt><dd>{{ checagem.justificativa }}</dd>
+    <dt>Contraposicao sugerida</dt><dd>{{ checagem.contraposicao_sugerida }}</dd>
+    <dt>Criado em</dt><dd>{{ checagem.criado_em }}</dd>
+</dl>
+<h2>Evidencias</h2>
+<pre>{{ checagem.evidencias }}</pre>
+<p><a href="{{ url_for('veritas.pdf', checagem_id=checagem.id) }}">Baixar PDF</a></p>
+{% endblock %}
