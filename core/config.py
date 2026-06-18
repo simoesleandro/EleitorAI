@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     langfuse_public_key: str = ""
     langfuse_secret_key: str = ""
     langfuse_host: str = "https://cloud.langfuse.com"
+    portal_transparencia_api_key: str = ""
 
 
 @lru_cache
