@@ -16,7 +16,7 @@
 [![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
 [![Last Commit](https://img.shields.io/github/last-commit/simoesleandro/eleitorai?style=flat-square&color=8b5cf6)](https://github.com/simoesleandro/eleitorai/commits)
 [![Issues](https://img.shields.io/github/issues/simoesleandro/eleitorai?style=flat-square&color=f59e0b)](https://github.com/simoesleandro/eleitorai/issues)
-[![Tests](https://img.shields.io/badge/tests-48_passing-22c55e?style=flat-square&logo=pytest)](tests/)
+[![Tests](https://img.shields.io/badge/tests-102_passing-22c55e?style=flat-square&logo=pytest)](tests/)
 
 <br/>
 
@@ -69,8 +69,8 @@ Built as a Flask monolith + APScheduler worker communicating via SQLite + `job_q
 
 ## 🎯 Demo
 
-> **PT:** Deploy em produção ainda não disponível — projeto está na **Phase 0 (Foundation)**.
-> **EN:** Production deploy not yet available — the project is at **Phase 0 (Foundation)**.
+> **PT:** Deploy em produção ainda não disponível — projeto está na **Phase 1 (Veritas entregue, PDF pendente Linux)**.
+> **EN:** Production deploy not yet available — the project is at **Phase 1 (Veritas delivered, PDF pending Linux)**.
 
 🔗 **Demo ao vivo / Live demo:** *(em breve / coming soon)*
 
@@ -88,8 +88,8 @@ Built as a Flask monolith + APScheduler worker communicating via SQLite + `job_q
 
 | Phase | Descrição / Description | Status |
 |-------|------------------------|--------|
-| **Phase 0** | Foundation — core, DB, schema, RAG, LLM, coletores, notifier, Flask, worker, Docker, CI | ✅ Entregue / Delivered — **48 tests passing** |
-| **Phase 1** | Veritas — fact-checker agentic com 5 agentes LangGraph | 🚧 Em desenvolvimento / In progress |
+| **Phase 0** | Foundation — core, DB, schema, RAG, LLM, coletores, notifier, Flask, worker, Docker, CI | ✅ Entregue / Delivered — 48 tests |
+| **Phase 1** | Veritas — 5 agentes LangGraph, 5 scrapers, 7 ferramentas, guard ≥2 fontes, auto-crítica, dossiê MD/PDF, worker, dashboard | ✅ Entregue / Delivered — **102 tests passing** (PDF: 🚧 funciona em Linux/Fly.io, não testável em Windows dev) |
 | **Phase 2** | Eco — detecção de narrativas e amplificação coordenada | 🚧 Aguardando Phase 1 / Awaiting Phase 1 |
 | **Phase 3** | Tribuno — análise de debate em tempo real | 🚧 Aguardando Phase 2 / Awaiting Phase 2 |
 
@@ -97,8 +97,8 @@ Built as a Flask monolith + APScheduler worker communicating via SQLite + `job_q
 
 ## ✨ Funcionalidades / Features
 
-> **PT:** Esta entrega cobre a **Phase 0 (Foundation)** — todo o core, infraestrutura e coletores base.
-> **EN:** This release covers **Phase 0 (Foundation)** — all core, infrastructure and base collectors.
+> **PT:** Esta entrega cobre a **Phase 0 (Foundation)** e a **Phase 1 (Veritas)** — fact-checker agentic completo, com dossiê PDF diferido para deploy Linux.
+> **EN:** This release covers **Phase 0 (Foundation)** and **Phase 1 (Veritas)** — full agentic fact-checker, with PDF dossier deferred to Linux deploy.
 
 ### Phase 0 (entregue / delivered)
 
@@ -113,13 +113,17 @@ Built as a Flask monolith + APScheduler worker communicating via SQLite + `job_q
 - ✅ Dockerfile, docker-compose, `fly.toml` (região `gru`)
 - ✅ CI GitHub Actions (ruff + pytest)
 
-### Phase 1 — Veritas (em desenvolvimento / in progress)
+### Phase 1 — Veritas (entregue / delivered)
 
-- 🚧 5 agentes LangGraph (extrator, pesquisador, verificador, redator, crítico)
-- 🚧 Base de fact-checks: Lupa, Boatos, FatoFake, Checamos, Estadão Verifica, Comprova, Truco
-- 🚧 6 ferramentas: RAG fact-checks, IBGE, TSE, Tesouro, DataSUS, notícias RSS
-- 🚧 Guard *"≥2 fontes para classificar falso"*
-- 🚧 Dossiê MD/PDF com contraposição sugerida
+- ✅ 5 agentes LangGraph (extrator, pesquisador, verificador, redator, crítico)
+- ✅ Base de fact-checks: 5 scrapers (Lupa, Boatos, FatoFake, Checamos, Estadão Verifica)
+- ✅ 7 ferramentas: RAG fact-checks, IBGE, TSE, Tesouro, DataSUS, Portal Transparência, notícias RSS
+- ✅ Guard *"≥2 fontes para classificar falso"* (com loop de retry)
+- ✅ Loop de auto-crítica (max 3 iterações, marca *"revisar"* se rejeitado)
+- ✅ Dossiê MD estruturado com contraposição sugerida
+- 🚧 Dossiê PDF (WeasyPrint — funciona em produção Linux/Fly.io, não testável em Windows dev)
+- ✅ Worker jobs (`veritas_check`, `veritas_seed`, `veritas_atualiza_base`)
+- ✅ Dashboard Flask `/veritas` (lista, detalhe, novo)
 
 ### Phase 2 — Eco (planejado / planned)
 
@@ -152,7 +156,7 @@ Built as a Flask monolith + APScheduler worker communicating via SQLite + `job_q
 | Transcrição / Transcription | Whisper, `youtube-transcript-api` | Tribuno + Veritas |
 | Notificações / Notifications | Telegram Bot | Alertas do worker |
 | Deploy | Fly.io (região `gru`) | `fly.toml` + `docker-compose` |
-| Testes / Tests | pytest (48 testes) | Mocks de LLM nos testes |
+| Testes / Tests | pytest (102 testes / tests) | Mocks de LLM nos testes / LLM mocked in tests |
 
 ---
 
@@ -240,7 +244,7 @@ eleitorai/
 ├── worker/                 # APScheduler daemon
 │   ├── __main__.py         # python -m worker --daemon
 │   └── pipeline.py         # run_once + schedule_jobs
-├── tests/                  # 48 testes pytest
+├── tests/                  # 102 testes pytest
 ├── .github/workflows/      # CI: ruff + pytest
 ├── Dockerfile
 ├── docker-compose.yml
@@ -281,7 +285,7 @@ Flask dashboard (http://localhost:5090/dashboard)
 ## 🧪 Testes / Tests
 
 ```bash
-# Rodar suite completa (48 tests) / Run full suite
+# Rodar suite completa (102 tests) / Run full suite
 pytest -v
 
 # Com cobertura / With coverage
@@ -292,18 +296,20 @@ pytest tests/core/ -v
 pytest tests/app/ -v
 pytest tests/core/rag/ -v
 pytest tests/core/coletores/ -v
+pytest tests/core/veritas/ -v      # Phase 1 — Veritas
 ```
 
 > **PT:** Cobertura — 80%+ em `core/`, 70%+ em módulos. LLM mockado via `respx` e fixtures pytest.
 > **EN:** Coverage — 80%+ on `core/`, 70%+ on modules. LLM is mocked via `respx` and pytest fixtures.
 
-**48 testes** cobrindo / covering:
+**102 testes** cobrindo / covering:
 
 - `core/config`, `core/db`, `core/fila`, `core/llm`, `core/modelos`, `core/notifier`
 - `core/coletores/youtube`, `core/coletores/telegram`
 - `core/rag/embeddings`, `core/rag/retriever`
-- `app/routes/auth`, `app/routes/dashboard`
+- `app/routes/auth`, `app/routes/dashboard`, `app/routes/veritas`
 - `worker/pipeline`
+- `core/veritas/` — pipeline LangGraph, agentes, ferramentas, scrapers, guard, crítico, dossie
 
 ---
 
@@ -311,8 +317,8 @@ pytest tests/core/coletores/ -v
 
 > Planos detalhados em / Detailed plans at: [`../docs/plans/`](../docs/plans/)
 
-- [x] **Phase 0** — Foundation: core, DB, schema, RAG, LLM, coletores, notifier, Flask, worker, Docker, CI *(esta entrega / this release)*
-- [ ] **Phase 1** — Veritas fact-checker (~3 semanas / weeks)
+- [x] **Phase 0** — Foundation: core, DB, schema, RAG, LLM, coletores, notifier, Flask, worker, Docker, CI
+- [x] **Phase 1** — Veritas fact-checker agentic (5 agentes, 5 scrapers, 7 ferramentas, guard, auto-crítica, dossiê MD, worker, dashboard) — PDF diferido para Linux / PDF deferred to Linux
 - [ ] **Phase 2** — Eco detecção de narrativas (~3 semanas / weeks)
 - [ ] **Phase 3** — Tribuno análise de debate (~4 semanas / weeks)
 - [ ] **Deploy Fly.io produção** com secrets reais / with real secrets
