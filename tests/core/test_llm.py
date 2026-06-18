@@ -1,6 +1,5 @@
-import pytest
 from unittest.mock import patch, MagicMock
-from core.llm import get_gemini_client, get_model, gerar_resposta, gerar_embedding
+from core.llm import get_gemini_client, gerar_resposta, gerar_embedding
 from core.config import get_settings
 
 

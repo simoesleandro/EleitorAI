@@ -1,4 +1,3 @@
-import os
 from core.config import get_settings, Settings
 
 

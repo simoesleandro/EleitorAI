@@ -1,7 +1,4 @@
 import json
-import pytest
-import respx
-import httpx
 from core.notifier import enviar_telegram, enviar_alerta
 from core.modelos import Alerta
 

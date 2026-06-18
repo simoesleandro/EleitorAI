@@ -1,4 +1,3 @@
-import pytest
 from unittest.mock import patch
 from core.rag.embeddings import indexar
 from core.rag.retriever import buscar

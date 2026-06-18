@@ -1,5 +1,3 @@
-import os
-import tempfile
 import sqlite3
 import pytest
 from core.db import init_db, get_db

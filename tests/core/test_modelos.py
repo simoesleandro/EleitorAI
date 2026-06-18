@@ -2,7 +2,6 @@ import pytest
 from pydantic import ValidationError
 from core.modelos import (
     Mencao, Afirmacao, Checagem, Evidencia, Alerta, Job, Candidato, Fonte,
-    Veredito, Severidade, JobStatus,
 )
 
 

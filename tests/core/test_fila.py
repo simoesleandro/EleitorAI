@@ -1,4 +1,3 @@
-import pytest
 from core.fila import enqueue, dequeue, complete_job, fail_job, list_pending
 
 

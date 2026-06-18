@@ -1,7 +1,6 @@
 import asyncio
 import hashlib
 import logging
-from typing import Optional
 
 from telethon import TelegramClient
 from telethon.tl.types import Message

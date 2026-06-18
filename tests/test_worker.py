@@ -1,4 +1,3 @@
-import pytest
 from worker.pipeline import run_once, schedule_jobs, recover_stuck_jobs
 from core.fila import enqueue
 
