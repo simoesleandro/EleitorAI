@@ -3,7 +3,7 @@ from typing import Callable
 
 from apscheduler.schedulers.background import BackgroundScheduler
 
-from core.db import init_db
+from core.db import get_db, init_db
 from core.fila import dequeue, complete_job, fail_job
 
 logger = logging.getLogger(__name__)
@@ -15,7 +15,22 @@ def register_handler(tipo: str, fn: Callable) -> None:
     _JOB_HANDLERS[tipo] = fn
 
 
+def recover_stuck_jobs(timeout_minutes: int = 30) -> int:
+    conn = get_db()
+    try:
+        cursor = conn.execute(
+            "UPDATE job_queue SET status='pending', iniciado_em=NULL "
+            "WHERE status='running' AND iniciado_em < datetime('now', ?)",
+            (f"-{timeout_minutes} minutes",),
+        )
+        conn.commit()
+        return cursor.rowcount
+    finally:
+        conn.close()
+
+
 def run_once() -> int:
+    recover_stuck_jobs()
     processed = 0
     while True:
         job = dequeue()
