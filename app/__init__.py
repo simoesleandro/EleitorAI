@@ -3,8 +3,11 @@ from flask_wtf.csrf import CSRFProtect
 
 from core.config import get_settings
 from core.db import get_db
+from core.logging_redactor import install_redactor
 
 csrf = CSRFProtect()
+
+install_redactor()
 
 
 def _kpi_context() -> dict:

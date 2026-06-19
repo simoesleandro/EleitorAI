@@ -1,0 +1,10 @@
+repos:
+  - repo: local
+    hooks:
+      - id: block-env-files
+        name: Block .env files from being committed
+        entry: python scripts/check_no_env.py
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]
