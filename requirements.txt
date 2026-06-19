@@ -19,7 +19,7 @@ beautifulsoup4==4.12.3
 lxml==5.3.0
 langfuse==2.53.9
 pytest==8.3.3
-pytest-cov==5.0.0
+pytest-cov==7.1.0
 pytest-asyncio==0.24.0
 respx==0.22.0
 ruff==0.7.0
