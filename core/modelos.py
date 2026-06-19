@@ -122,3 +122,47 @@ class ResultadoVerificacao(BaseModel):
     confianca: float = Field(ge=0.0, le=1.0)
     justificativa: str
     contraposicao_sugerida: str
+
+
+ClassificacaoNarrativa = Literal["organico", "amplificado", "coordenado", "suspeito_bot"]
+TipoAmplificador = Literal["telegram_channel", "youtube_channel", "instagram_account"]
+TipoRelacao = Literal["forward", "crosspost", "reply_chain"]
+
+
+class Cluster(BaseModel):
+    id: str
+    mencao_ids: list[int]
+    centroide_texto: str
+    volume: int
+
+
+class Narrativa(BaseModel):
+    cluster_id: str
+    nome: str
+    descricao: str
+    volume: int
+    velocidade_crescimento: float
+    classificacao: ClassificacaoNarrativa
+    confianca: float = Field(ge=0.0, le=1.0)
+    justificativa: str
+    candidatos_afetados: list[str] = Field(default_factory=list)
+    primeiro_post_em: str
+    id: Optional[int] = None
+
+
+class Amplificador(BaseModel):
+    identificador: str
+    tipo: TipoAmplificador
+    centralidade: float = Field(ge=0.0, le=1.0)
+    suspeita_bot: bool = False
+    idade_conta_dias: Optional[int] = None
+    id: Optional[int] = None
+
+
+class RelacaoAmplificacao(BaseModel):
+    de_identificador: str
+    para_identificador: str
+    peso: float
+    janela_minutos: int
+    tipo: TipoRelacao
+    id: Optional[int] = None
