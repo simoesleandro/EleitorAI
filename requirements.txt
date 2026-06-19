@@ -16,7 +16,7 @@ playwright==1.47.0
 apscheduler==3.10.4
 requests==2.32.3
 beautifulsoup4==4.12.3
-lxml==5.3.0
+lxml==6.1.1
 langfuse==2.53.9
 pytest==8.3.3
 pytest-cov==5.0.0
