@@ -11,7 +11,7 @@ sqlite-vec==0.1.6
 telethon==1.36.0
 yt-dlp==2024.10.7
 youtube-transcript-api==0.6.2
-openai-whisper==20231117
+openai-whisper==20250625
 playwright==1.47.0
 apscheduler==3.10.4
 requests==2.32.3
