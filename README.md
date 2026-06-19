@@ -89,8 +89,8 @@ Built as a Flask monolith + APScheduler worker communicating via SQLite + `job_q
 | Phase | Descrição / Description | Status |
 |-------|------------------------|--------|
 | **Phase 0** | Foundation — core, DB, schema, RAG, LLM, coletores, notifier, Flask, worker, Docker, CI | ✅ Entregue / Delivered — 48 tests |
-| **Phase 1** | Veritas — 5 agentes LangGraph, 5 scrapers, 7 ferramentas, guard ≥2 fontes, auto-crítica, dossiê MD/PDF, worker, dashboard | ✅ Entregue / Delivered — **102 tests passing** (PDF: 🚧 funciona em Linux/Fly.io, não testável em Windows dev) |
-| **Phase 2** | Eco — detecção de narrativas e amplificação coordenada | 🚧 Aguardando Phase 1 / Awaiting Phase 1 |
+| **Phase 1** | Veritas — 5 agentes LangGraph, 5 scrapers, 7 ferramentas, guard ≥2 fontes, auto-crítica, dossiê MD/PDF, worker, dashboard | ✅ Entregue / Delivered — 102 tests (PDF: 🚧 funciona em Linux/Fly.io, não testável em Windows dev) |
+| **Phase 2** | Eco — embeddings + HDBSCAN, NetworkX, 4 agentes, pipeline LangGraph, dashboard d3, worker, integração Eco→Veritas | ✅ Entregue / Delivered — 30+ tests novos, **132 tests passing** |
 | **Phase 3** | Tribuno — análise de debate em tempo real | 🚧 Aguardando Phase 2 / Awaiting Phase 2 |
 
 ---
@@ -125,12 +125,18 @@ Built as a Flask monolith + APScheduler worker communicating via SQLite + `job_q
 - ✅ Worker jobs (`veritas_check`, `veritas_seed`, `veritas_atualiza_base`)
 - ✅ Dashboard Flask `/veritas` (lista, detalhe, novo)
 
-### Phase 2 — Eco (planejado / planned)
+### Phase 2 — Eco (entregue / delivered)
 
-- 🚧 Embeddings + HDBSCAN clustering
-- 🚧 NetworkX graph (Telegram forward chains, YouTube comments)
-- 🚧 4 agentes (narratólogo, analista de rede, caracterizador, crítico)
-- 🚧 Dashboard d3 force-directed
+- ✅ Embeddings Gemini + clustering HDBSCAN (`min_cluster_size=5`, `min_samples=3`)
+- ✅ NetworkX DiGraph (Telegram forward chains + YouTube comment crosspost)
+- ✅ 4 agentes LangGraph: `caracterizador` (organico/amplificado/coordenado/suspeito_bot), `narratorologo` (nomeia), `analista_rede` (features), `critico` (auto-revisão)
+- ✅ Pipeline LangGraph com 8 nós: ingestao → clustering → deteccao_emergencia → grafo_analise → caracterizacao → nomeacao → critico → entrega
+- ✅ Integração Eco→Veritas: narraativas "coordenado" ou "suspeito_bot" disparam `veritas_check` automaticamente
+- ✅ Coletor Instagram best-effort (Playwright, com warning de risco)
+- ✅ Worker jobs `eco_coleta`, `eco_analyze` (registrados em `worker/pipeline.py`)
+- ✅ Dashboard Flask `/eco` (lista, detalhe, grafo)
+- ✅ Grafo d3 force-directed (nodes = amplificadores, raio = centralidade, vermelho = suspeita_bot)
+- 🚧 Detecção de emergência por z-score (placeholder, retorna todos clusters; follow-up)
 
 ### Phase 3 — Tribuno (planejado / planned)
 
@@ -285,7 +291,7 @@ Flask dashboard (http://localhost:5090/dashboard)
 ## 🧪 Testes / Tests
 
 ```bash
-# Rodar suite completa (102 tests) / Run full suite
+# Rodar suite completa (132 tests) / Run full suite
 pytest -v
 
 # Com cobertura / With coverage
@@ -297,19 +303,22 @@ pytest tests/app/ -v
 pytest tests/core/rag/ -v
 pytest tests/core/coletores/ -v
 pytest tests/core/veritas/ -v      # Phase 1 — Veritas
+pytest tests/eco/ -v               # Phase 2 — Eco
+pytest tests/test_jobs_eco.py -v   # Phase 2 — worker jobs
 ```
 
 > **PT:** Cobertura — 80%+ em `core/`, 70%+ em módulos. LLM mockado via `respx` e fixtures pytest.
 > **EN:** Coverage — 80%+ on `core/`, 70%+ on modules. LLM is mocked via `respx` and pytest fixtures.
 
-**102 testes** cobrindo / covering:
+**132 testes** cobrindo / covering:
 
 - `core/config`, `core/db`, `core/fila`, `core/llm`, `core/modelos`, `core/notifier`
-- `core/coletores/youtube`, `core/coletores/telegram`
+- `core/coletores/youtube`, `core/coletores/telegram`, `core/coletores/instagram`
 - `core/rag/embeddings`, `core/rag/retriever`
-- `app/routes/auth`, `app/routes/dashboard`, `app/routes/veritas`
-- `worker/pipeline`
+- `app/routes/auth`, `app/routes/dashboard`, `app/routes/veritas`, `app/routes/eco`
+- `worker/pipeline`, `worker/jobs_veritas`, `worker/jobs_eco`
 - `core/veritas/` — pipeline LangGraph, agentes, ferramentas, scrapers, guard, crítico, dossie
+- `eco/` — clustering (HDBSCAN), grafo (NetworkX), 4 agentes, pipeline LangGraph
 
 ---
 
@@ -319,7 +328,7 @@ pytest tests/core/veritas/ -v      # Phase 1 — Veritas
 
 - [x] **Phase 0** — Foundation: core, DB, schema, RAG, LLM, coletores, notifier, Flask, worker, Docker, CI
 - [x] **Phase 1** — Veritas fact-checker agentic (5 agentes, 5 scrapers, 7 ferramentas, guard, auto-crítica, dossiê MD, worker, dashboard) — PDF diferido para Linux / PDF deferred to Linux
-- [ ] **Phase 2** — Eco detecção de narrativas (~3 semanas / weeks)
+- [x] **Phase 2** — Eco detecção de narrativas (HDBSCAN + NetworkX, 4 agentes LangGraph, dashboard d3, worker, integração Eco→Veritas) — z-score emergencia: follow-up
 - [ ] **Phase 3** — Tribuno análise de debate (~4 semanas / weeks)
 - [ ] **Deploy Fly.io produção** com secrets reais / with real secrets
 - [ ] **Demo vídeo** de cada módulo / of each module

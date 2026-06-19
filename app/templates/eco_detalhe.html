@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Narrativa #{{ narrativa.id }} - Eco{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="page-eyebrow">Módulo · Eco · Narrativa #{{ narrativa.id }}</div>
+    <h1 class="page-title">
+        <span class="badge {{ narrativa.classificacao }}">{{ narrativa.classificacao }}</span>
+        {{ narrativa.nome }}
+    </h1>
+    <p class="page-subtitle">{{ narrativa.descricao }}</p>
+</div>
+
+<div class="section">
+    <div class="section-header">
+        <div class="section-title">Métricas</div>
+    </div>
+    <div class="kpi-grid">
+        <div class="kpi">
+            <div class="kpi-label">Volume</div>
+            <div class="kpi-value">{{ narrativa.volume }}</div>
+        </div>
+        <div class="kpi">
+            <div class="kpi-label">Velocidade</div>
+            <div class="kpi-value">{{ "%.1f"|format(narrativa.velocidade_crescimento or 0) }}</div>
+        </div>
+        <div class="kpi">
+            <div class="kpi-label">Confiança</div>
+            <div class="kpi-value">{{ "%.0f"|format((narrativa.confianca_classificacao or 0) * 100) }}%</div>
+        </div>
+        <div class="kpi">
+            <div class="kpi-label">Detectado em</div>
+            <div class="kpi-value" style="font-size:14px;">{{ narrativa.primeiro_post_em or '—' }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="section">
+    <div class="section-header">
+        <div class="section-title">Justificativa da classificação</div>
+    </div>
+    <p>{{ narrativa.justificativa_classificacao or '(sem justificativa)' }}</p>
+</div>
+
+{% if amplificadores %}
+<div class="section">
+    <div class="section-header">
+        <div class="section-title">Amplificadores ({{ amplificadores|length }})</div>
+        <a href="{{ url_for('eco.grafo', narrativa_id=narrativa.id) }}" class="section-link">Ver grafo →</a>
+    </div>
+    <div class="activity-list">
+        {% for a in amplificadores %}
+        <div class="activity-item">
+            <div class="activity-icon {% if a.suspeita_bot %}falso{% else %}verdadeiro{% endif %}">
+                {% if a.suspeita_bot %}B{% else %}@{% endif %}
+            </div>
+            <div class="activity-body">
+                <div class="activity-text">{{ a.identificador }}</div>
+                <div class="activity-meta">
+                    <span class="badge info">{{ a.tipo }}</span>
+                    <span>centralidade: {{ "%.2f"|format(a.centralidade) }}</span>
+                    {% if a.suspeita_bot %}<span class="badge falso">suspeita bot</span>{% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+    <a href="{{ url_for('eco.lista') }}" class="btn btn-secondary">← Voltar</a>
+    <a href="{{ url_for('eco.grafo', narrativa_id=narrativa.id) }}" class="btn btn-primary">Ver grafo d3</a>
+</div>
+{% endblock %}

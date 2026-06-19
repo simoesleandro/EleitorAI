@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Eco - Narrativas{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="page-eyebrow">Módulo · Eco</div>
+    <h1 class="page-title">Narrativas detectadas</h1>
+    <p class="page-subtitle">Clusters de menções com amplificação anômala detectados pelo pipeline LangGraph (4 agentes: caracterizador, narrador, analista de rede, crítico).</p>
+</div>
+
+<div class="kpi-grid">
+    <div class="kpi">
+        <div class="kpi-label">Total</div>
+        <div class="kpi-value">{{ stats.total }}</div>
+    </div>
+    <div class="kpi danger">
+        <div class="kpi-label">Coordenado</div>
+        <div class="kpi-value">{{ stats.coordenado }}</div>
+    </div>
+    <div class="kpi warning">
+        <div class="kpi-label">Suspeito bot</div>
+        <div class="kpi-value">{{ stats.suspeito_bot }}</div>
+    </div>
+    <div class="kpi">
+        <div class="kpi-label">Orgânico</div>
+        <div class="kpi-value">{{ stats.organico }}</div>
+    </div>
+</div>
+
+<div class="section">
+    <div class="section-header">
+        <div class="section-title">Últimas narrativas</div>
+    </div>
+    {% if narrativas %}
+    <div class="activity-list">
+        {% for n in narrativas %}
+        <a href="{{ url_for('eco.detalhe', narrativa_id=n.id) }}" class="activity-item">
+            <div class="activity-icon {{ n.classificacao }}">
+                {% if n.classificacao == 'coordenado' %}!{% elif n.classificacao == 'suspeito_bot' %}?{% else %}·{% endif %}
+            </div>
+            <div class="activity-body">
+                <div class="activity-text">{{ n.nome }}</div>
+                <div class="activity-meta">
+                    <span class="badge {{ n.classificacao }}">{{ n.classificacao }}</span>
+                    <span>volume {{ n.volume }}</span>
+                    <span>{{ "%.0f"|format((n.confianca_classificacao or 0) * 100) }}% confiança</span>
+                    <span>{{ n.criado_em }}</span>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="activity-empty">
+        Nenhuma narrativa detectada ainda. O worker precisa rodar o job <code>eco_analyze</code> para popular.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
