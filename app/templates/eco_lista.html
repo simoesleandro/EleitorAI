@@ -1,6 +1,18 @@
 {% extends "base.html" %}
 {% block title %}Eco - Narrativas{% endblock %}
 {% block content %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div style="margin-bottom: 1rem;">
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}" style="background: var(--bg-elevated); border: 1px solid var(--border); border-left: 3px solid var(--accent); padding: 0.75rem 1rem; border-radius: var(--radius-md); margin-bottom: 0.5rem;">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+{% endwith %}
+
 <div class="page-header">
     <div class="page-eyebrow">Módulo · Eco</div>
     <h1 class="page-title">Narrativas detectadas</h1>
@@ -28,6 +40,60 @@
 
 <div class="section">
     <div class="section-header">
+        <div class="section-title">Ações</div>
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start;">
+        <form method="post" action="{{ url_for('eco.trigger_analyze') }}" style="background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div style="margin-bottom: 0.75rem;">
+                <label for="janela_horas" style="font-size: 13px; font-weight: 600; color: var(--text); display: block; margin-bottom: 0.25rem;">Janela de análise (horas)</label>
+                <input type="number" id="janela_horas" name="janela_horas" value="24" min="1" max="168" style="background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.5rem; color: var(--text); width: 100px;">
+                <span style="font-size: 12px; color: var(--text-muted); margin-left: 0.5rem;">1-168h (default 24h)</span>
+            </div>
+            <button type="submit" class="btn btn-primary">▶ Rodar análise agora</button>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 0.5rem;">Enfileira job eco_analyze. Worker processa em ≤60s.</div>
+        </form>
+        <form method="post" action="{{ url_for('eco.trigger_coleta') }}" style="background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div style="margin-bottom: 0.75rem;">
+                <label for="instagram_handle" style="font-size: 13px; font-weight: 600; color: var(--text); display: block; margin-bottom: 0.25rem;">Handle Instagram (opcional)</label>
+                <input type="text" id="instagram_handle" name="instagram_handle" placeholder="@canal_politico" style="background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.5rem; color: var(--text); width: 200px; margin-right: 0.5rem;">
+                <label for="limite" style="font-size: 12px; color: var(--text-muted);">Limite</label>
+                <input type="number" id="limite" name="limite" value="20" min="1" max="100" style="background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.5rem; color: var(--text); width: 60px;">
+            </div>
+            <button type="submit" class="btn btn-secondary">📥 Coletar Instagram</button>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 0.5rem;">Best-effort (ToS restritivo). Sem handle = pula Instagram.</div>
+        </form>
+    </div>
+</div>
+
+{% if recent_jobs %}
+<div class="section">
+    <div class="section-header">
+        <div class="section-title">Jobs Eco recentes</div>
+    </div>
+    <div class="activity-list">
+        {% for j in recent_jobs %}
+        <div class="activity-item">
+            <div class="activity-icon {% if j.status == 'done' %}verdadeiro{% elif j.status == 'failed' %}falso{% else %}verdadeiro{% endif %}">
+                {% if j.status == 'done' %}✓{% elif j.status == 'failed' %}✕{% elif j.status == 'running' %}⟳{% else %}·{% endif %}
+            </div>
+            <div class="activity-body">
+                <div class="activity-text">Job #{{ j.id }} · {{ j.tipo }}</div>
+                <div class="activity-meta">
+                    <span class="badge info">{{ j.status }}</span>
+                    <span>criado: {{ j.criado_em }}</span>
+                    {% if j.concluido_em %}<span>concluído: {{ j.concluido_em }}</span>{% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div class="section">
+    <div class="section-header">
         <div class="section-title">Últimas narrativas</div>
     </div>
     {% if narrativas %}
@@ -51,7 +117,7 @@
     </div>
     {% else %}
     <div class="activity-empty">
-        Nenhuma narrativa detectada ainda. O worker precisa rodar o job <code>eco_analyze</code> para popular.
+        Nenhuma narrativa detectada ainda. Use <strong>▶ Rodar análise agora</strong> acima (precisa de menções recentes + Gemini válido).
     </div>
     {% endif %}
 </div>

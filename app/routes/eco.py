@@ -1,6 +1,7 @@
-from flask import Blueprint, abort, jsonify, render_template
+from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, url_for
 
 from core.db import get_db
+from core.fila import enqueue
 
 bp = Blueprint("eco", __name__, url_prefix="/eco")
 
@@ -22,9 +23,20 @@ def lista():
             "amplificado": sum(1 for n in narrativas if n["classificacao"] == "amplificado"),
             "organico": sum(1 for n in narrativas if n["classificacao"] == "organico"),
         }
+        recent_jobs = [dict(r) for r in conn.execute(
+            """SELECT id, tipo, status, criado_em, concluido_em
+               FROM job_queue
+               WHERE modulo = 'eco'
+               ORDER BY id DESC LIMIT 5"""
+        ).fetchall()]
     finally:
         conn.close()
-    return render_template("eco_lista.html", narrativas=narrativas, stats=stats)
+    return render_template(
+        "eco_lista.html",
+        narrativas=narrativas,
+        stats=stats,
+        recent_jobs=recent_jobs,
+    )
 
 
 @bp.route("/<int:narrativa_id>")
@@ -85,3 +97,34 @@ def grafo(narrativa_id):
         narrativa=dict(narrativa),
         nodes_json=jsonify({"nodes": nodes, "links": links}).get_json(),
     )
+
+
+@bp.route("/analyze", methods=["POST"])
+def trigger_analyze():
+    try:
+        janela = int(request.form.get("janela_horas", 24))
+    except (TypeError, ValueError):
+        janela = 24
+    janela = max(1, min(janela, 168))
+    job_id = enqueue("eco", "eco_analyze", {"janela_horas": janela})
+    flash(f"Análise Eco agendada. Job #{job_id} (janela {janela}h). O worker processa em até 60s. Recarregue esta página.", "success")
+    return redirect(url_for("eco.lista"))
+
+
+@bp.route("/coleta", methods=["POST"])
+def trigger_coleta():
+    handle = (request.form.get("instagram_handle") or "").strip()
+    try:
+        limite = int(request.form.get("limite", 20))
+    except (TypeError, ValueError):
+        limite = 20
+    limite = max(1, min(limite, 100))
+    payload = {"limite": limite}
+    if handle:
+        payload["instagram_handle"] = handle
+    job_id = enqueue("eco", "eco_coleta", payload)
+    if handle:
+        flash(f"Coleta Instagram agendada para {handle} (limite {limite}). Job #{job_id}.", "success")
+    else:
+        flash(f"Coleta de fontes configuradas agendada. Job #{job_id}.", "info")
+    return redirect(url_for("eco.lista"))
