@@ -7,6 +7,7 @@ from core.db import get_db, init_db
 from core.fila import dequeue, complete_job, fail_job
 
 from worker.jobs_veritas import job_veritas_check, job_veritas_seed, job_veritas_atualiza_base
+from worker.jobs_eco import job_eco_coleta, job_eco_analyze
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +21,8 @@ def register_handler(tipo: str, fn: Callable) -> None:
 register_handler("veritas_check", job_veritas_check)
 register_handler("veritas_seed", job_veritas_seed)
 register_handler("veritas_atualiza_base", job_veritas_atualiza_base)
+register_handler("eco_coleta", job_eco_coleta)
+register_handler("eco_analyze", job_eco_analyze)
 
 
 def recover_stuck_jobs(timeout_minutes: int = 30) -> int:

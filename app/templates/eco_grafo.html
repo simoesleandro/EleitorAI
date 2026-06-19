@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Grafo - Narrativa #{{ narrativa.id }}{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="page-eyebrow">Módulo · Eco · Grafo d3</div>
+    <h1 class="page-title">{{ narrativa.nome }}</h1>
+    <p class="page-subtitle">Visualização force-directed dos amplificadores e relações. <span class="badge {{ narrativa.classificacao }}">{{ narrativa.classificacao }}</span></p>
+</div>
+
+<div class="section">
+    <svg id="eco-grafo" width="100%" height="600" style="background: var(--bg-elevated); border-radius: var(--radius-md);"></svg>
+</div>
+
+<a href="{{ url_for('eco.detalhe', narrativa_id=narrativa.id) }}" class="btn btn-secondary">← Voltar para narrativa</a>
+
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="{{ url_for('static', filename='js/eco_grafo.js') }}"></script>
+<script>
+  window.ecoGrafoData = {{ nodes_json | safe }};
+  renderEcoGrafo(window.ecoGrafoData);
+</script>
+{% endblock %}
