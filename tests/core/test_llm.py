@@ -181,3 +181,172 @@ def test_gerar_resposta_inline_pydantic_refs_em_schema_aninhado(monkeypatch):
     assert "claims" in raw["properties"]
 
 
+# Campos que o Google AI (google-genai) rejeita em schemas JSON.
+# Lista derivada de google.genai.models._Schema_to_mldev.
+_GOOGLE_AI_FORBIDDEN_FIELDS = {
+    "title",
+    "default",
+    "anyOf",
+    "any_of",
+    "minimum",
+    "maximum",
+    "min_items",
+    "minItems",
+    "max_items",
+    "maxItems",
+    "min_length",
+    "minLength",
+    "max_length",
+    "maxLength",
+    "min_properties",
+    "minProperties",
+    "max_properties",
+    "maxProperties",
+    "nullable",
+    "pattern",
+    "example",
+    "property_ordering",
+    "propertyOrdering",
+}
+
+
+def _walk_for_forbidden(node, path=""):
+    """Recursively find any forbidden Google AI fields in a schema dict."""
+    found = []
+    if isinstance(node, dict):
+        for k, v in node.items():
+            if k in _GOOGLE_AI_FORBIDDEN_FIELDS:
+                found.append(f"{path}.{k}")
+            found.extend(_walk_for_forbidden(v, f"{path}.{k}"))
+    elif isinstance(node, list):
+        for i, v in enumerate(node):
+            found.extend(_walk_for_forbidden(v, f"{path}[{i}]"))
+    return found
+
+
+def test_gerar_resposta_schema_strips_google_ai_forbidden_fields(monkeypatch):
+    """Schema enviado ao Gemini nao pode conter title, default, anyOf, etc.
+
+    O Google AI (google-genai <= 0.3.0) rejeita esses campos com ValueError
+    em _Schema_to_mldev. Pydantic 2.x os adiciona por default em model_json_schema.
+    """
+    from typing import List, Optional
+    from pydantic import BaseModel, Field
+
+    class ClaimExtraida(BaseModel):
+        texto: str
+        sujeito: Optional[str] = None  # gera anyOf + default
+        confianca: float = Field(ge=0.0, le=1.0)  # gera minimum + maximum
+        checavel: bool = True  # gera default
+
+    class VeritasReport(BaseModel):
+        resumo: str
+        claims: List[ClaimExtraida]
+
+    get_settings.cache_clear()
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key")
+    mock_client = MagicMock()
+    mock_response = MagicMock()
+    mock_response.text = VeritasReport(
+        resumo="ok",
+        claims=[ClaimExtraida(texto="x", confianca=0.9)],
+    ).model_dump_json()
+    mock_client.models.generate_content.return_value = mock_response
+
+    with patch("core.llm.get_gemini_client", return_value=mock_client):
+        gerar_resposta("prompt", response_schema=VeritasReport)
+
+    config = mock_client.models.generate_content.call_args.kwargs["config"]
+    raw = config.response_schema
+    if hasattr(raw, "model_dump"):
+        raw = raw.model_dump()
+    if hasattr(raw, "to_dict"):
+        raw = raw.to_dict()
+
+    # Confirmar que os campos PROIBIDOS foram removidos
+    forbidden_found = _walk_for_forbidden(raw)
+    assert forbidden_found == [], (
+        f"Schema enviado ao Gemini contem campos proibidos pelo Google AI: "
+        f"{forbidden_found}. Schema: {raw}"
+    )
+
+
+def test_inline_pydantic_refs_strips_forbidden_fields_directly():
+    """Testa a funcao _inline_pydantic_refs isoladamente com schema cheio
+    de campos proibidos pelo Google AI."""
+    import json
+    from pydantic import BaseModel, Field
+    from typing import List, Optional
+    from core.llm import _inline_pydantic_refs
+
+    class Claim(BaseModel):
+        texto: str
+        sujeito: Optional[str] = None
+        confianca: float = Field(ge=0.0, le=1.0)
+        checavel: bool = True
+
+    class Report(BaseModel):
+        claims: List[Claim]
+
+    schema = Report.model_json_schema()
+    inlined = _inline_pydantic_refs(schema)
+    inlined_str = json.dumps(inlined)
+
+    # $ref e $defs devem ser removidos (comportamento existente)
+    assert "$ref" not in inlined_str
+    assert "$defs" not in inlined_str
+
+    # Campos proibidos pelo Google AI devem ser removidos (novo comportamento)
+    forbidden_found = _walk_for_forbidden(inlined)
+    assert forbidden_found == [], (
+        f"Campos proibidos pelo Google AI ainda presentes no schema: "
+        f"{forbidden_found}. Schema: {inlined_str[:500]}"
+    )
+
+
+def test_gerar_resposta_real_call_with_veritas_schema(monkeypatch):
+    """Teste integracao: chama gerar_resposta com _ListaClaims (o schema que
+    quebrou o job #9) e valida que o config passado ao Gemini nao vai levantar
+    ValueError 'title parameter is not supported in Google AI'.
+
+    Mockamos apenas a chamada HTTP, deixando o processamento de schema real.
+    """
+    from pydantic import BaseModel
+    from typing import List
+    from core.modelos import ClaimExtraida
+
+    class _ListaClaims(BaseModel):
+        claims: List[ClaimExtraida]
+
+    get_settings.cache_clear()
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key")
+    mock_client = MagicMock()
+    mock_response = MagicMock()
+    mock_response.text = '{"claims": [{"texto": "test", "confianca": 0.9}]}'
+    mock_client.models.generate_content.return_value = mock_response
+
+    with patch("core.llm.get_gemini_client", return_value=mock_client):
+        result = gerar_resposta("prompt", response_schema=_ListaClaims)
+
+    # Validar que a chamada foi feita sem erro (sem ValueError do Google AI)
+    assert mock_client.models.generate_content.call_count == 1
+
+    # Validar o schema enviado
+    config = mock_client.models.generate_content.call_args.kwargs["config"]
+    raw = config.response_schema
+    if hasattr(raw, "model_dump"):
+        raw = raw.model_dump()
+    if hasattr(raw, "to_dict"):
+        raw = raw.to_dict()
+
+    forbidden_found = _walk_for_forbidden(raw)
+    assert forbidden_found == [], (
+        f"Schema _ListaClaims contem campos proibidos: {forbidden_found}"
+    )
+
+    # Validar que o resultado foi parseado corretamente
+    assert isinstance(result, _ListaClaims)
+    assert len(result.claims) == 1
+    assert result.claims[0].texto == "test"
+
+

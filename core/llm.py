@@ -96,13 +96,51 @@ def get_model(name: str = "gemini-2.5-flash"):
     return get_gemini_client().models.get(name)
 
 
-def _inline_pydantic_refs(schema: dict) -> dict:
-    """Strip $defs and inline $ref for Gemini structured output compatibility.
+# Campos que o Google AI (google-genai <= 0.3.0) rejeita em schemas JSON.
+# Lista derivada de google.genai.models._Schema_to_mldev.
+# Pydantic 2.x adiciona esses campos por default em model_json_schema.
+_GOOGLE_AI_FORBIDDEN_FIELDS = frozenset({
+    "title",
+    "default",
+    "anyOf",
+    "any_of",
+    "minimum",
+    "maximum",
+    "min_items",
+    "minItems",
+    "max_items",
+    "maxItems",
+    "min_length",
+    "minLength",
+    "max_length",
+    "maxLength",
+    "min_properties",
+    "minProperties",
+    "max_properties",
+    "maxProperties",
+    "nullable",
+    "pattern",
+    "example",
+    "property_ordering",
+    "propertyOrdering",
+})
 
-    Pydantic 2.x emits ``$ref`` / ``$defs`` for nested models. Gemini rejects
-    these with extra_forbidden. This walks the schema, replaces every
-    ``{"$ref": "#/$defs/X"}`` with the inlined definition, and removes the
-    ``$defs`` block.
+
+def _inline_pydantic_refs(schema: dict) -> dict:
+    """Strip $defs, inline $ref, and remove Google AI-forbidden fields.
+
+    Pydantic 2.x emits ``$ref`` / ``$defs`` for nested models, plus fields
+    like ``title``, ``default``, ``anyOf``, ``minimum``, ``maximum`` that the
+    Google AI structured output API rejects with ValueError.
+
+    This walks the schema and:
+    1. Replaces every ``{"$ref": "#/$defs/X"}`` with the inlined definition
+    2. Removes the ``$defs`` block
+    3. Removes any field in ``_GOOGLE_AI_FORBIDDEN_FIELDS``
+    4. Flattens ``anyOf`` with a null option into ``type`` with ``nullable``
+       is NOT done (Google AI rejects ``nullable`` too) - instead the first
+       non-null type from anyOf is used, since Optional fields default to
+       null anyway and Gemini can return null for absent fields.
     """
     defs = schema.pop("$defs", {}) if isinstance(schema, dict) else {}
 
@@ -114,7 +152,25 @@ def _inline_pydantic_refs(schema: dict) -> dict:
                 if ref.startswith(prefix) and ref[len(prefix):] in defs:
                     inlined = defs[ref[len(prefix):]]
                     return _resolve(inlined)
-            return {k: _resolve(v) for k, v in node.items() if k != "$defs"}
+            result = {}
+            for k, v in node.items():
+                if k in _GOOGLE_AI_FORBIDDEN_FIELDS:
+                    continue
+                if k == "$defs":
+                    continue
+                if k == "anyOf" and isinstance(v, list):
+                    # anyOf [{type: string}, {type: null}] -> pick first non-null
+                    non_null = [
+                        opt for opt in v
+                        if not (isinstance(opt, dict) and opt.get("type") == "null")
+                    ]
+                    if non_null:
+                        resolved = _resolve(non_null[0])
+                        if isinstance(resolved, dict):
+                            result.update(resolved)
+                        continue
+                result[k] = _resolve(v)
+            return result
         if isinstance(node, list):
             return [_resolve(x) for x in node]
         return node
