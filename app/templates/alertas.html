@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Alertas - EleitorAI{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="page-eyebrow" style="color: var(--danger);">Operação · Alertas</div>
+    <h1 class="page-title">Alertas enviados</h1>
+    <p class="page-subtitle">Notificações enviadas ao time de comunicação via Telegram. Cada alerta corresponde a uma checagem Veritas com veredito "falso" ou "enganoso".</p>
+</div>
+
+<div class="kpi-grid">
+    <div class="kpi">
+        <div class="kpi-label">Total de alertas</div>
+        <div class="kpi-value">{{ stats.total }}</div>
+    </div>
+    <div class="kpi danger">
+        <div class="kpi-label">Severidade alta</div>
+        <div class="kpi-value">{{ stats.alto }}</div>
+    </div>
+    <div class="kpi warning">
+        <div class="kpi-label">Severidade média</div>
+        <div class="kpi-value">{{ stats.medio }}</div>
+    </div>
+</div>
+
+<div class="section">
+    <div class="section-header">
+        <div class="section-title">Histórico</div>
+    </div>
+    {% if alertas %}
+    <div class="activity-list">
+        {% for a in alertas %}
+        <div class="activity-item">
+            <div class="activity-icon {% if a.severidade == 'alto' %}falso{% else %}enganoso{% endif %}">!</div>
+            <div class="activity-body">
+                <div class="activity-text">{{ a.titulo }}</div>
+                <div class="activity-meta">
+                    <span class="badge {{ a.severidade }}">{{ a.severidade }}</span>
+                    <span>{{ a.criado_em }}</span>
+                    <span>módulo: {{ a.modulo }}</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="activity-empty">Nenhum alerta enviado ainda.</div>
+    {% endif %}
+</div>
+{% endblock %}

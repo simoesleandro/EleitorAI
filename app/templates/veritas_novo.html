@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Nova checagem - Veritas{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="page-eyebrow">Módulo · Veritas</div>
+    <h1 class="page-title">Nova checagem</h1>
+    <p class="page-subtitle">Submeta um texto para análise. O pipeline Veritas processa em background via worker — você será notificado quando o dossiê estiver pronto.</p>
+</div>
+
+<div class="section" style="max-width: 720px;">
+    <form method="post" action="{{ url_for('veritas.novo') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-group">
+            <label for="conteudo" class="form-label">Conteúdo para análise</label>
+            <textarea id="conteudo" name="conteudo" class="form-textarea" required placeholder="Cole aqui a transcrição de uma entrevista, trecho de discurso, ou texto de post que você quer verificar...">{{ request.form.get('conteudo', '') }}</textarea>
+            <div class="form-help">O texto será processado pelos 5 agentes: extrator (claims), pesquisador (evidências), verificador (veredito), redator (dossiê) e crítico (revisão).</div>
+        </div>
+        <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+            <button type="submit" class="btn btn-primary">Submeter para análise</button>
+            <a href="{{ url_for('veritas.lista') }}" class="btn btn-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} - EleitorAI{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="page-eyebrow" style="color: var(--danger);">Erro {{ code }}</div>
+    <h1 class="page-title">{{ title }}</h1>
+    <p class="page-subtitle">{{ message }}</p>
+</div>
+
+<div class="alert alert-info" style="background: var(--bg-elevated); border-color: var(--border);">
+    <strong>O que isso significa?</strong><br>
+    {{ explanation | safe }}
+</div>
+
+<a href="{{ url_for('dashboard.index') }}" class="btn btn-primary" style="margin-top: 1rem;">← Voltar ao dashboard</a>
+{% endblock %}

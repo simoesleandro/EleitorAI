@@ -1,18 +1,57 @@
 {% extends "base.html" %}
 {% block title %}Checagem #{{ checagem.id }}{% endblock %}
 {% block content %}
-<h1>Checagem #{{ checagem.id }}</h1>
-<p><a href="{{ url_for('veritas.lista') }}">Voltar para lista</a></p>
-<dl>
-    <dt>Veredito</dt><dd>{{ checagem.veredito }}</dd>
-    <dt>Confianca</dt><dd>{{ "%.0f"|format(checagem.confianca * 100) }}%</dd>
-    <dt>Claim</dt><dd>{{ checagem.claim }}</dd>
-    <dt>Justificativa</dt><dd>{{ checagem.justificativa }}</dd>
-    <dt>Contraposicao sugerida</dt><dd>{{ checagem.contraposicao_sugerida }}</dd>
-    <dt>Criado em</dt><dd>{{ checagem.criado_em }}</dd>
-</dl>
-<h2>Evidencias</h2>
-<pre>{{ checagem.evidencias }}</pre>
-<!-- PDF generation requires WeasyPrint, deferred to Linux deploy -->
-<!-- <p><a href="{{ url_for('veritas.pdf', checagem_id=checagem.id) }}">Baixar PDF</a></p> -->
+<div class="page-header">
+    <div class="page-eyebrow">Módulo · Veritas · Checagem #{{ checagem.id }}</div>
+    <h1 class="page-title">
+        <span class="badge {{ checagem.veredito }}" style="font-size: 14px; vertical-align: middle;">{{ checagem.veredito }}</span>
+    </h1>
+    <p class="page-subtitle">Processada em {{ checagem.criado_em }} · {{ "%.0f"|format(checagem.confianca * 100) }}% de confiança · {{ checagem.fontes_independentes }} fonte{{ '' if checagem.fontes_independentes == 1 else 's' }} independente{{ '' if checagem.fontes_independentes == 1 else 's' }}</p>
+</div>
+
+<div class="section">
+    <div class="section-header">
+        <div class="section-title">Claim</div>
+    </div>
+    <p style="font-size: 16px; line-height: 1.6; color: var(--text); padding: 0.5rem 0;">{{ checagem.claim or '(não disponível)' }}</p>
+</div>
+
+<div class="section">
+    <div class="section-header">
+        <div class="section-title">Justificativa</div>
+    </div>
+    <p style="line-height: 1.7; color: var(--text);">{{ checagem.justificativa }}</p>
+</div>
+
+<div class="section">
+    <div class="section-header">
+        <div class="section-title">Contraposição sugerida</div>
+    </div>
+    <p style="line-height: 1.7; padding: 1rem; background: var(--bg-elevated); border-left: 3px solid var(--accent); border-radius: 0 var(--radius-md) var(--radius-md) 0;">{{ checagem.contraposicao_sugerida }}</p>
+</div>
+
+{% if checagem.evidencias_list %}
+<div class="section">
+    <div class="section-header">
+        <div class="section-title">Evidências ({{ checagem.evidencias_list|length }})</div>
+    </div>
+    <div class="activity-list">
+        {% for ev in checagem.evidencias_list %}
+        <div class="activity-item" style="display: block;">
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                <span class="badge info">{{ ev.fonte }}</span>
+                {% if ev.url %}<a href="{{ ev.url }}" target="_blank" style="font-size: 12px;">{{ ev.url[:60] }}…</a>{% endif %}
+            </div>
+            <div style="font-size: 13px; color: var(--text); line-height: 1.6;">{{ ev.trecho }}</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+    <a href="{{ url_for('veritas.lista') }}" class="btn btn-secondary">← Voltar para lista</a>
+    <a href="{{ url_for('veritas.md_download', checagem_id=checagem.id) }}" class="btn btn-secondary">Baixar Markdown</a>
+    <a href="{{ url_for('veritas.pdf', checagem_id=checagem.id) }}" class="btn btn-primary">Baixar PDF</a>
+</div>
 {% endblock %}

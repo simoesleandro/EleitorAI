@@ -7,13 +7,48 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
 </head>
 <body>
-    <header>
-        <nav>
-            <a href="{{ url_for('dashboard.index') }}" class="logo">EleitorAI</a>
+<div class="app">
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-mark">E</div>
+            <div>
+                <div class="brand-name">EleitorAI</div>
+                <div class="brand-tag">Inteligência Eleitoral</div>
+            </div>
+        </div>
+        <nav class="nav">
+            <div class="nav-section">Visão Geral</div>
+            <a href="{{ url_for('dashboard.index') }}" class="nav-link {% if request.endpoint == 'dashboard.index' %}active{% endif %}">
+                <span class="nav-icon">◆</span>Dashboard
+            </a>
+            <div class="nav-section">Módulos</div>
+            <a href="{{ url_for('veritas.lista') }}" class="nav-link {% if 'veritas' in (request.endpoint or '') %}active{% endif %}">
+                <span class="nav-icon">✓</span>Veritas
+                <span class="nav-status {% if kpi.checagens == 0 %}idle{% else %}pending{% endif %}" title="{% if kpi.checagens == 0 %}ocioso{% else %}ativo{% endif %}"></span>
+            </a>
+            <a href="#" class="nav-link" style="opacity: 0.5; cursor: not-allowed;" title="Phase 2 - em desenvolvimento">
+                <span class="nav-icon">◆</span>Eco <span style="font-size: 10px; color: var(--text-dim); margin-left: auto;">em breve</span>
+            </a>
+            <a href="#" class="nav-link" style="opacity: 0.5; cursor: not-allowed;" title="Phase 3 - em desenvolvimento">
+                <span class="nav-icon">◆</span>Tribuno <span style="font-size: 10px; color: var(--text-dim); margin-left: auto;">em breve</span>
+            </a>
+            <div class="nav-section">Operação</div>
+            <a href="/operacao/alertas" class="nav-link {% if 'alertas' in (request.endpoint or '') %}active{% endif %}">
+                <span class="nav-icon">!</span>Alertas
+                {% if kpi.alertas %}<span class="nav-status pending" title="alertas pendentes"></span>{% endif %}
+            </a>
+            <a href="#" class="nav-link" style="opacity: 0.5; cursor: not-allowed;" title="Em breve">
+                <span class="nav-icon">◆</span>Configurações
+            </a>
         </nav>
-    </header>
-    <main>
+        <div class="sidebar-footer">
+            <div>v1.0 · Phase 0+1</div>
+            <div style="margin-top: 4px;"><span class="live-dot"></span>Sistema operacional</div>
+        </div>
+    </aside>
+    <main class="main">
         {% block content %}{% endblock %}
     </main>
+</div>
 </body>
 </html>

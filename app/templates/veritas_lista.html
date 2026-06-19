@@ -1,30 +1,71 @@
 {% extends "base.html" %}
 {% block title %}Veritas - Checagens{% endblock %}
 {% block content %}
-<h1>Veritas</h1>
-<p><a href="{{ url_for('dashboard.index') }}">Voltar ao dashboard</a></p>
-<section>
-    <h2>Ultimas checagens</h2>
+<div class="page-header">
+    <div class="page-eyebrow">Módulo · Veritas</div>
+    <h1 class="page-title">Checagens</h1>
+    <p class="page-subtitle">Lista de fact-checks processados pelo pipeline. Cada item passa por 5 agentes LangGraph (extrator → pesquisador → verificador → redator → crítico).</p>
+</div>
+
+<div class="kpi-grid">
+    <div class="kpi">
+        <div class="kpi-label">Total de checagens</div>
+        <div class="kpi-value">{{ stats.total }}</div>
+    </div>
+    <div class="kpi danger">
+        <div class="kpi-label">✕ Falsos</div>
+        <div class="kpi-value">{{ stats.falsos }}</div>
+    </div>
+    <div class="kpi success">
+        <div class="kpi-label">✓ Verdadeiros</div>
+        <div class="kpi-value">{{ stats.verdadeiros }}</div>
+    </div>
+    <div class="kpi warning">
+        <div class="kpi-label">! Enganosos</div>
+        <div class="kpi-value">{{ stats.enganosos }}</div>
+    </div>
+</div>
+
+<div class="section">
+    <div class="section-header">
+        <div class="section-title">Últimas checagens</div>
+        <form method="post" action="{{ url_for('veritas.novo') }}" style="display: inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-primary" formaction="{{ url_for('veritas.novo_form') }}">
+                + Nova checagem
+            </button>
+        </form>
+    </div>
     {% if checagens %}
     <table>
         <thead>
-            <tr><th>ID</th><th>Veredito</th><th>Confianca</th><th>Claim</th><th>Data</th><th>Detalhe</th></tr>
+            <tr>
+                <th style="width: 60px;">ID</th>
+                <th>Veredito</th>
+                <th>Claim</th>
+                <th style="width: 100px;">Confiança</th>
+                <th style="width: 140px;">Data</th>
+                <th style="width: 80px;"></th>
+            </tr>
         </thead>
         <tbody>
             {% for c in checagens %}
             <tr>
-                <td>{{ c.id }}</td>
-                <td>{{ c.veredito }}</td>
-                <td>{{ "%.0f"|format(c.confianca * 100) }}%</td>
-                <td>{{ c.claim[:80] }}{% if c.claim|length > 80 %}...{% endif %}</td>
-                <td>{{ c.criado_em }}</td>
-                <td><a href="{{ url_for('veritas.detalhe', checagem_id=c.id) }}">ver</a></td>
+                <td style="color: var(--text-muted); font-variant-numeric: tabular-nums;">#{{ c.id }}</td>
+                <td><span class="badge {{ c.veredito }}">{{ c.veredito }}</span></td>
+                <td>{{ c.claim[:100] }}{% if c.claim|length > 100 %}…{% endif %}</td>
+                <td style="font-variant-numeric: tabular-nums;">{{ "%.0f"|format(c.confianca * 100) }}%</td>
+                <td style="color: var(--text-muted); font-size: 12px;">{{ c.criado_em }}</td>
+                <td><a href="{{ url_for('veritas.detalhe', checagem_id=c.id) }}" style="font-size: 12px;">ver →</a></td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
     {% else %}
-    <p>Nenhuma checagem registrada ainda.</p>
+    <div class="activity-empty">
+        <p style="margin-bottom: 1rem;">Nenhuma checagem registrada ainda.</p>
+        <a href="{{ url_for('veritas.novo_form') }}" class="btn btn-primary">+ Submeter primeira checagem</a>
+    </div>
     {% endif %}
-</section>
+</div>
 {% endblock %}
