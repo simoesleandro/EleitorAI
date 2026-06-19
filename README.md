@@ -387,8 +387,8 @@ pytest tests/test_worker_lock.py -v  # Hardening — OS file lock (Fix C)
 
 ## 📄 Licença / License
 
-**PT:** MIT — ver [`LICENSE`](LICENSE). *(Arquivo a ser criado em task futura / File to be added in a future task.)*
-**EN:** MIT — see [`LICENSE`](LICENSE). *(File to be added in a future task.)*
+**PT:** MIT — ver [`LICENSE`](LICENSE).
+**EN:** MIT — see [`LICENSE`](LICENSE).
 
 ---
 
