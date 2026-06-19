@@ -9,8 +9,11 @@ logs/
 .venv/
 venv/
 .pytest_cache/
+.pytest-tmp/
+.ruff_cache/
 .coverage
 htmlcov/
+.worktrees/
 *.egg-info/
 dist/
 build/
