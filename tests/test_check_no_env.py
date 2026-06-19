@@ -36,6 +36,11 @@ def test_hook_allows_env_example(tmp_path):
     assert r.returncode == 0, f"stderr: {r.stderr}"
 
 
+def test_hook_allows_env_ci(tmp_path):
+    r = _run_with_staged(tmp_path, [".env.ci"])
+    assert r.returncode == 0, f"stderr: {r.stderr}"
+
+
 def test_hook_allows_normal_files(tmp_path):
     r = _run_with_staged(tmp_path, ["README.md", "app/main.py", "data/test.db"])
     assert r.returncode == 0

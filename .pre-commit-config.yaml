@@ -8,3 +8,10 @@ repos:
         pass_filenames: false
         always_run: true
         stages: [pre-commit]
+
+      - id: gitleaks
+        name: Scan for secrets with gitleaks
+        entry: bash -c 'command -v gitleaks >/dev/null 2>&1 && gitleaks protect --staged --config .gitleaks.toml --no-banner || echo "[gitleaks] not installed, skipping (install: https://github.com/gitleaks/gitleaks)"'
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]

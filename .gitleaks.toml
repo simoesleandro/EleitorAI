@@ -1,0 +1,60 @@
+# gitleaks configuration for EleitorAI
+# Docs: https://github.com/gitleaks/gitleaks
+#
+# Run locally: gitleaks detect --config .gitleaks.toml --source .
+# Pre-commit: see .pre-commit-config.yaml
+# CI: see .github/workflows/ci.yml (runs on every push)
+
+title = "EleitorAI secret scanning"
+
+[extend]
+# Inherit default rules from gitleaks (covers AWS, GCP, GitHub, etc.)
+useDefault = true
+
+[allowlist]
+description = "Allow fake values and test fixtures"
+paths = [
+  '''\.env\.ci$''',
+  '''\.env\.example$''',
+  '''tests/.*''',
+  '''docs/.*''',
+  '''README\.md$''',
+  '''SECURITY\.md$''',
+  '''.gitleaks\.toml$''',
+]
+
+regexes = [
+  '''ci-fake-[a-z0-9-]+''',
+  '''CIFake[A-Za-z]+''',
+  '''0000000000:''',
+  '''test-key''',
+  '''test-token''',
+  '''testhash''',
+  '''TestSecretKey12345XYZ''',
+  '''TestTokenSecretABCDE''',
+]
+
+# Custom rules for EleitorAI-specific patterns
+[[rules]]
+id = "eleitorai-gemini-key"
+description = "Google Gemini API key"
+regex = '''AIzaSy[A-Za-z0-9_-]{33}'''
+tags = ["gemini", "api-key"]
+
+[[rules]]
+id = "eleitorai-telegram-bot-token"
+description = "Telegram bot token"
+regex = '''[0-9]{8,10}:AA[A-Za-z0-9_-]{33}'''
+tags = ["telegram", "bot"]
+
+[[rules]]
+id = "eleitorai-telegram-api-hash"
+description = "Telegram API hash (32 hex)"
+regex = '''['\"]([a-f0-9]{32})['\"]'''
+tags = ["telegram", "api-hash"]
+
+[[rules]]
+id = "eleitorai-langfuse-key"
+description = "Langfuse API key"
+regex = '''(?i)(pk-lf-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}|sk-lf-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})'''
+tags = ["langfuse", "api-key"]

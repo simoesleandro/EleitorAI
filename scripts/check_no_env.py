@@ -8,7 +8,7 @@ Usage:
 import subprocess
 import sys
 
-ALLOWED = {".env.example"}
+ALLOWED = {".env.example", ".env.ci"}
 
 
 def main() -> int:
