@@ -1,7 +1,6 @@
-import pytest
 from unittest.mock import patch
-from eco.pipeline import rodar_eco, EcoState
-from core.modelos import Cluster, Narrativa
+from eco.pipeline import rodar_eco
+from core.modelos import Cluster
 
 
 def test_rodar_eco_pipeline_completo(db):

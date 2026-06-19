@@ -1,4 +1,3 @@
-import pytest
 from unittest.mock import patch
 from eco.clustering import clusterizar_mencoes
 from core.modelos import Cluster

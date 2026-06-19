@@ -2,7 +2,6 @@ import json
 from datetime import datetime, timedelta
 from typing import TypedDict
 
-import networkx as nx
 from langgraph.graph import END, StateGraph
 
 from core.db import get_db

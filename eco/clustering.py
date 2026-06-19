@@ -29,7 +29,7 @@ def clusterizar_mencoes(mencoes: list[dict], min_cluster_size: int = 5) -> list[
     for label in set(labels):
         if label == -1:
             continue
-        indices = [i for i, l in enumerate(labels) if l == label]
+        indices = [i for i, label_val in enumerate(labels) if label_val == label]
         if len(indices) < min_cluster_size:
             continue
         mencao_ids = [mencoes[i]["id"] for i in indices]

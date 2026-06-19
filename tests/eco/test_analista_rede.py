@@ -1,4 +1,3 @@
-import pytest
 import networkx as nx
 from eco.agentes.analista_rede import analisar_rede
 from core.modelos import Amplificador

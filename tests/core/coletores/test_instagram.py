@@ -1,4 +1,3 @@
-import pytest
 from unittest.mock import patch, MagicMock
 from core.coletores.instagram import coletar_posts
 from core.modelos import Mencao

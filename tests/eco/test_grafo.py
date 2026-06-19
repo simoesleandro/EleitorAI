@@ -1,4 +1,3 @@
-import pytest
 from eco.grafo import construir_grafo, calcular_metricas, extrair_amplificadores
 from core.modelos import Amplificador
 
