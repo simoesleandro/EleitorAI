@@ -9,7 +9,7 @@ google-genai==0.3.0
 langgraph==0.2.23
 sqlite-vec==0.1.6
 telethon==1.36.0
-yt-dlp==2024.10.7
+yt-dlp==2026.6.9
 youtube-transcript-api==0.6.2
 openai-whisper==20231117
 playwright==1.47.0
