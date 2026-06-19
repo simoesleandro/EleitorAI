@@ -14,15 +14,15 @@
 [![SQLite](https://img.shields.io/badge/SQLite-+--sqlite--vec-003B57?style=flat-square&logo=sqlite&logoColor=white)](https://github.com/asg017/sqlite-vec)
 [![Deploy](https://img.shields.io/badge/deploy-Fly.io-7C3AED?style=flat-square&logo=fly.io)](https://fly.io)
 [![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
-[![Last Commit](https://img.shields.io/github/last-commit/simoesleandro/eleitorai?style=flat-square&color=8b5cf6)](https://github.com/simoesleandro/eleitorai/commits)
-[![Issues](https://img.shields.io/github/issues/simoesleandro/eleitorai?style=flat-square&color=f59e0b)](https://github.com/simoesleandro/eleitorai/issues)
-[![Tests](https://img.shields.io/badge/tests-102_passing-22c55e?style=flat-square&logo=pytest)](tests/)
+[![Last Commit](https://img.shields.io/github/last-commit/simoesleandro/EleitorAI?style=flat-square&color=8b5cf6)](https://github.com/simoesleandro/EleitorAI/commits)
+[![Issues](https://img.shields.io/github/issues/simoesleandro/EleitorAI?style=flat-square&color=f59e0b)](https://github.com/simoesleandro/EleitorAI/issues)
+[![Tests](https://img.shields.io/badge/tests-194_passing-22c55e?style=flat-square&logo=pytest)](tests/)
 
 <br/>
 
 [🚀 Demo *(em breve / coming soon)*](#-demo) &nbsp;·&nbsp;
-[🐛 Reportar bug](https://github.com/simoesleandro/eleitorai/issues) &nbsp;·&nbsp;
-[💡 Sugerir feature](https://github.com/simoesleandro/eleitorai/issues)
+[🐛 Reportar bug](https://github.com/simoesleandro/EleitorAI/issues) &nbsp;·&nbsp;
+[💡 Sugerir feature](https://github.com/simoesleandro/EleitorAI/issues)
 
 </div>
 
@@ -90,8 +90,17 @@ Built as a Flask monolith + APScheduler worker communicating via SQLite + `job_q
 |-------|------------------------|--------|
 | **Phase 0** | Foundation — core, DB, schema, RAG, LLM, coletores, notifier, Flask, worker, Docker, CI | ✅ Entregue / Delivered — 48 tests |
 | **Phase 1** | Veritas — 5 agentes LangGraph, 5 scrapers, 7 ferramentas, guard ≥2 fontes, auto-crítica, dossiê MD/PDF, worker, dashboard | ✅ Entregue / Delivered — 102 tests (PDF: 🚧 funciona em Linux/Fly.io, não testável em Windows dev) |
-| **Phase 2** | Eco — embeddings + HDBSCAN, NetworkX, 4 agentes, pipeline LangGraph, dashboard d3, worker, integração Eco→Veritas | ✅ Entregue / Delivered — 30+ tests novos, **132 tests passing** |
+| **Phase 2** | Eco — embeddings + HDBSCAN, NetworkX, 4 agentes, pipeline LangGraph, dashboard d3, worker, integração Eco→Veritas | ✅ Entregue / Delivered — 30+ tests novos, **194 tests passing** |
 | **Phase 3** | Tribuno — análise de debate em tempo real | 🚧 Aguardando Phase 2 / Awaiting Phase 2 |
+
+### Hardening & Security (pós-Phase 2)
+
+- ✅ Rate limiter + retry + concurrency control para Gemini (15 RPM, backoff exponencial)
+- ✅ Secret redaction em logs (PII/keys mascarados)
+- ✅ Pre-commit hooks (gitleaks + block .env)
+- ✅ CI env template, dependabot, SECURITY.md, gitleaks config
+- ✅ Worker OS-level file lock (Fix C: `msvcrt`/`fcntl` — sobrevive a SIGKILL sem stale PID)
+- ✅ Monitor script (`scripts/monitor.py`) — health-check do worker
 
 ---
 
@@ -162,7 +171,8 @@ Built as a Flask monolith + APScheduler worker communicating via SQLite + `job_q
 | Transcrição / Transcription | Whisper, `youtube-transcript-api` | Tribuno + Veritas |
 | Notificações / Notifications | Telegram Bot | Alertas do worker |
 | Deploy | Fly.io (região `gru`) | `fly.toml` + `docker-compose` |
-| Testes / Tests | pytest (102 testes / tests) | Mocks de LLM nos testes / LLM mocked in tests |
+| Testes / Tests | pytest (194 testes / tests) | Mocks de LLM nos testes / LLM mocked in tests |
+| Segurança / Security | gitleaks, pre-commit, logging redactor | Secret scanning + PII masking |
 
 ---
 
@@ -178,7 +188,7 @@ Built as a Flask monolith + APScheduler worker communicating via SQLite + `job_q
 
 ```bash
 # Clone / Clone the repo
-git clone https://github.com/simoesleandro/eleitorai.git
+git clone https://github.com/simoesleandro/EleitorAI.git
 cd eleitorai
 
 # Ambiente virtual / Virtual env
@@ -243,18 +253,37 @@ eleitorai/
 │   ├── schema.sql          # 17 tabelas, 5 índices, vec0
 │   ├── modelos.py          # Pydantic: Mencao, Afirmacao, Checagem, Alerta, Job
 │   ├── fila.py             # job_queue helpers (enqueue/dequeue/complete/fail)
-│   ├── llm.py              # Gemini client + embedding wrapper
+│   ├── llm.py              # Gemini client + embedding wrapper + rate limiter
 │   ├── notifier.py         # Telegram notifier (httpx)
+│   ├── logging_redactor.py # Secret redaction em logs
 │   ├── rag/                # embeddings.py + retriever.py (hybrid)
-│   └── coletores/          # youtube.py + telegram.py
+│   └── coletores/          # youtube.py + telegram.py + instagram.py
+├── veritas/                # Phase 1 — fact-checker agentic
+│   ├── agentes/            # 5 agentes LangGraph
+│   ├── ferramentas/        # 7 tools: RAG, IBGE, TSE, Tesouro, DataSUS, etc
+│   ├── scrapers/           # 5 scrapers: Lupa, Boatos, FatoFake, Checamos, Estadão
+│   ├── pipeline.py         # LangGraph state machine
+│   └── dossie.py           # Geração MD/PDF
+├── eco/                    # Phase 2 — detecção de narrativas
+│   ├── agentes/            # 4 agentes LangGraph
+│   ├── clustering.py       # HDBSCAN
+│   ├── grafo.py            # NetworkX DiGraph
+│   └── pipeline.py         # LangGraph state machine
 ├── worker/                 # APScheduler daemon
-│   ├── __main__.py         # python -m worker --daemon
-│   └── pipeline.py         # run_once + schedule_jobs
-├── tests/                  # 102 testes pytest
-├── .github/workflows/      # CI: ruff + pytest
+│   ├── __main__.py         # python -m worker --daemon (OS file lock)
+│   ├── pipeline.py         # run_once + schedule_jobs
+│   ├── jobs_veritas.py     # Jobs do Veritas
+│   └── jobs_eco.py         # Jobs do Eco
+├── scripts/
+│   ├── monitor.py          # Health-check do worker
+│   └── telegram_auth.py    # Autenticação Telethon
+├── tests/                  # 194 testes pytest
+├── .github/workflows/      # CI: ruff + pytest + gitleaks
+├── .pre-commit-config.yaml # Hooks: gitleaks + block .env
 ├── Dockerfile
 ├── docker-compose.yml
 ├── fly.toml                # região gru, processos web + worker
+├── SECURITY.md             # Política de segurança
 ├── requirements.txt
 └── .env.example
 ```
@@ -284,14 +313,14 @@ Flask dashboard (http://localhost:5090/dashboard)
 - **Shared volume no Fly.io** — `eleitorai_data` mount em `/data` para o SQLite
 - **Phase 0 first, agents later** — `langgraph` instalado mas sem grafos até Phase 1
 
-> Spec completa em / Full spec at: [`../docs/specs/2026-06-18-eleitorai-platform-design.md`](../docs/specs/2026-06-18-eleitorai-platform-design.md)
+> Spec completa em / Full spec at: [`docs/`](docs/)
 
 ---
 
 ## 🧪 Testes / Tests
 
 ```bash
-# Rodar suite completa (132 tests) / Run full suite
+# Rodar suite completa (194 tests) / Run full suite
 pytest -v
 
 # Com cobertura / With coverage
@@ -302,33 +331,35 @@ pytest tests/core/ -v
 pytest tests/app/ -v
 pytest tests/core/rag/ -v
 pytest tests/core/coletores/ -v
-pytest tests/core/veritas/ -v      # Phase 1 — Veritas
+pytest tests/veritas/ -v          # Phase 1 — Veritas
 pytest tests/eco/ -v               # Phase 2 — Eco
 pytest tests/test_jobs_eco.py -v   # Phase 2 — worker jobs
+pytest tests/test_worker_lock.py -v  # Hardening — OS file lock (Fix C)
 ```
 
 > **PT:** Cobertura — 80%+ em `core/`, 70%+ em módulos. LLM mockado via `respx` e fixtures pytest.
 > **EN:** Coverage — 80%+ on `core/`, 70%+ on modules. LLM is mocked via `respx` and pytest fixtures.
 
-**132 testes** cobrindo / covering:
+**194 testes** cobrindo / covering:
 
 - `core/config`, `core/db`, `core/fila`, `core/llm`, `core/modelos`, `core/notifier`
 - `core/coletores/youtube`, `core/coletores/telegram`, `core/coletores/instagram`
 - `core/rag/embeddings`, `core/rag/retriever`
 - `app/routes/auth`, `app/routes/dashboard`, `app/routes/veritas`, `app/routes/eco`
-- `worker/pipeline`, `worker/jobs_veritas`, `worker/jobs_eco`
-- `core/veritas/` — pipeline LangGraph, agentes, ferramentas, scrapers, guard, crítico, dossie
+- `worker/pipeline`, `worker/jobs_veritas`, `worker/jobs_eco`, `worker/__main__` (OS file lock)
+- `veritas/` — pipeline LangGraph, agentes, ferramentas, scrapers, guard, crítico, dossie
 - `eco/` — clustering (HDBSCAN), grafo (NetworkX), 4 agentes, pipeline LangGraph
 
 ---
 
 ## 🗺 Roadmap
 
-> Planos detalhados em / Detailed plans at: [`../docs/plans/`](../docs/plans/)
+> Planos detalhados em / Detailed plans at: [`docs/`](docs/)
 
 - [x] **Phase 0** — Foundation: core, DB, schema, RAG, LLM, coletores, notifier, Flask, worker, Docker, CI
 - [x] **Phase 1** — Veritas fact-checker agentic (5 agentes, 5 scrapers, 7 ferramentas, guard, auto-crítica, dossiê MD, worker, dashboard) — PDF diferido para Linux / PDF deferred to Linux
 - [x] **Phase 2** — Eco detecção de narrativas (HDBSCAN + NetworkX, 4 agentes LangGraph, dashboard d3, worker, integração Eco→Veritas) — z-score emergencia: follow-up
+- [x] **Hardening** — Rate limiter, secret redaction, pre-commit (gitleaks), OS file lock (Fix C), monitor script
 - [ ] **Phase 3** — Tribuno análise de debate (~4 semanas / weeks)
 - [ ] **Deploy Fly.io produção** com secrets reais / with real secrets
 - [ ] **Demo vídeo** de cada módulo / of each module
