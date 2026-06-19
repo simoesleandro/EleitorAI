@@ -14,6 +14,9 @@ venv/
 .coverage
 htmlcov/
 .worktrees/
+eleitorai_session.session
+*.session
+
 *.egg-info/
 dist/
 build/
