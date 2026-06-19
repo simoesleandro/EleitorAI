@@ -12,14 +12,55 @@ logger = logging.getLogger(__name__)
 
 def job_eco_coleta(payload: dict[str, Any]) -> dict:
     handle = payload.get("instagram_handle")
-    if handle:
+    telegram_channels = payload.get("telegram_channels")
+    limite = payload.get("limite", 100)
+    telegram_count = 0
+    instagram_count = 0
+    if telegram_channels:
+        for canal in telegram_channels:
+            telegram_count += _coletar_telegram(canal, limite)
+    elif handle and handle.startswith("@"):
+        telegram_count = _coletar_telegram(handle, limite)
+    else:
+        telegram_count = _coletar_todos_canais_telegram(limite)
+    if handle and not handle.startswith("@"):
         try:
             from core.coletores.instagram import coletar_posts
             mencoes = coletar_posts(handle, limite=payload.get("limite", 20))
-            _salvar_mencoes_eco(mencoes)
+            instagram_count = _salvar_mencoes_eco(mencoes)
         except Exception as e:
             logger.warning(f"eco coleta instagram falhou: {e}")
-    return {"coletado": True}
+    return {
+        "coletado": True,
+        "telegram": telegram_count,
+        "instagram": instagram_count,
+    }
+
+
+def _coletar_telegram(canal: str, limite: int) -> int:
+    try:
+        from core.coletores.telegram import coletar_canal
+        mencoes = coletar_canal(canal, limite=limite)
+        return _salvar_mencoes_eco(mencoes)
+    except Exception as e:
+        logger.warning(f"eco coleta telegram falhou para {canal}: {e}")
+        return 0
+
+
+def _coletar_todos_canais_telegram(limite: int) -> int:
+    conn = get_db()
+    try:
+        rows = conn.execute(
+            "SELECT identificador FROM fontes WHERE tipo='telegram' AND ativa=1 ORDER BY id"
+        ).fetchall()
+        canais = [r["identificador"] for r in rows]
+    finally:
+        conn.close()
+    total = 0
+    for canal in canais:
+        total += _coletar_telegram(canal, limite)
+    logger.info(f"eco coleta: {len(canais)} canais telegram iterados, {total} mencoes salvas")
+    return total
 
 
 def job_eco_analyze(payload: dict[str, Any]) -> dict:

@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 # Gemini free tier: 15 RPM for Flash, 2 RPM for Pro.
 # Conservative defaults for a single-key deployment.
 MAX_CONCURRENT_LLM_CALLS = 4
-MIN_INTERVAL_SECONDS = 1.0
+MIN_INTERVAL_SECONDS = 4.0
 RETRY_MAX_ATTEMPTS = 5
 RETRY_MAX_WAIT_SECONDS = 60
 
@@ -96,6 +96,32 @@ def get_model(name: str = "gemini-2.5-flash"):
     return get_gemini_client().models.get(name)
 
 
+def _inline_pydantic_refs(schema: dict) -> dict:
+    """Strip $defs and inline $ref for Gemini structured output compatibility.
+
+    Pydantic 2.x emits ``$ref`` / ``$defs`` for nested models. Gemini rejects
+    these with extra_forbidden. This walks the schema, replaces every
+    ``{"$ref": "#/$defs/X"}`` with the inlined definition, and removes the
+    ``$defs`` block.
+    """
+    defs = schema.pop("$defs", {}) if isinstance(schema, dict) else {}
+
+    def _resolve(node):
+        if isinstance(node, dict):
+            if "$ref" in node and isinstance(node["$ref"], str):
+                ref = node["$ref"]
+                prefix = "#/$defs/"
+                if ref.startswith(prefix) and ref[len(prefix):] in defs:
+                    inlined = defs[ref[len(prefix):]]
+                    return _resolve(inlined)
+            return {k: _resolve(v) for k, v in node.items() if k != "$defs"}
+        if isinstance(node, list):
+            return [_resolve(x) for x in node]
+        return node
+
+    return _resolve(schema)
+
+
 def gerar_resposta(
     prompt: str,
     modelo: str = "gemini-2.5-flash",
@@ -105,7 +131,11 @@ def gerar_resposta(
     config_kwargs = {}
     if response_schema is not None:
         config_kwargs["response_mime_type"] = "application/json"
-        config_kwargs["response_schema"] = response_schema
+        if isinstance(response_schema, type) and issubclass(response_schema, BaseModel):
+            schema_dict = response_schema.model_json_schema()
+            config_kwargs["response_schema"] = _inline_pydantic_refs(schema_dict)
+        else:
+            config_kwargs["response_schema"] = response_schema
     config = types.GenerateContentConfig(**config_kwargs) if config_kwargs else None
 
     def _call():
@@ -117,11 +147,14 @@ def gerar_resposta(
     return response.text
 
 
+EMBEDDING_MODEL = "gemini-embedding-001"
+
+
 def gerar_embedding(texto: str) -> list[float]:
     client = get_gemini_client()
 
     def _call():
-        return client.models.embed_content(model="text-embedding-004", contents=texto)
+        return client.models.embed_content(model=EMBEDDING_MODEL, contents=texto)
 
-    response = _chamar_gemini(_call, op_name="gerar_embedding")
+    response = _chamar_gemini(_call, op_name=f"gerar_embedding:{EMBEDDING_MODEL}")
     return list(response.embeddings[0].values)

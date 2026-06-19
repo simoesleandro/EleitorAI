@@ -39,9 +39,12 @@ def test_gerar_embedding_returns_list_of_floats(monkeypatch):
     mock_client.models.embed_content.return_value = mock_response
     with patch("core.llm.get_gemini_client", return_value=mock_client):
         emb = gerar_embedding("texto teste")
-        assert isinstance(emb, list)
-        assert len(emb) == 768
-        assert all(isinstance(x, float) for x in emb)
+    assert isinstance(emb, list)
+    assert len(emb) == 768
+    assert all(isinstance(x, float) for x in emb)
+    called_model = mock_client.models.embed_content.call_args.kwargs["model"]
+    assert "embedding" in called_model.lower()
+    assert "text-embedding-004" not in called_model, "text-embedding-004 is deprecated"
 
 
 def test_is_retryable_gemini_error_429():
@@ -127,4 +130,54 @@ def test_gerar_embedding_retried_em_503(monkeypatch):
     assert len(emb) == 768
     assert emb[0] == 0.5
     assert mock_client.models.embed_content.call_count == 2
+
+
+def test_gerar_resposta_inline_pydantic_refs_em_schema_aninhado(monkeypatch):
+    """Pydantic nested models must be inlined (no $ref, no $defs) for Gemini."""
+    from pydantic import BaseModel
+    from typing import List
+
+    class ClaimExtraida(BaseModel):
+        texto: str
+        confianca: float
+
+    class VeritasReport(BaseModel):
+        resumo: str
+        claims: List[ClaimExtraida]
+
+    get_settings.cache_clear()
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key")
+    mock_client = MagicMock()
+    mock_response = MagicMock()
+    mock_response.text = VeritasReport(
+        resumo="ok", claims=[ClaimExtraida(texto="x", confianca=0.9)]
+    ).model_dump_json()
+    mock_client.models.generate_content.return_value = mock_response
+
+    with patch("core.llm.get_gemini_client", return_value=mock_client):
+        gerar_resposta("prompt", response_schema=VeritasReport)
+
+    config = mock_client.models.generate_content.call_args.kwargs["config"]
+    raw = config.response_schema
+    if hasattr(raw, "model_dump"):
+        raw = raw.model_dump()
+    if hasattr(raw, "to_dict"):
+        raw = raw.to_dict()
+
+    def _walk(node, path=""):
+        if isinstance(node, dict):
+            assert "$ref" not in node, f"$ref found at {path}: {node}"
+            assert "$defs" not in node, f"$defs found at {path}: {node}"
+            for k, v in node.items():
+                _walk(v, f"{path}.{k}")
+        elif isinstance(node, list):
+            for i, v in enumerate(node):
+                _walk(v, f"{path}[{i}]")
+
+    _walk(raw)
+    assert isinstance(raw, dict)
+    assert raw.get("type") == "object"
+    assert "properties" in raw
+    assert "claims" in raw["properties"]
+
 

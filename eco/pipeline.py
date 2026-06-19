@@ -177,12 +177,17 @@ def _no_critico(state: EcoState) -> EcoState:
         if not review["aprova"]:
             if state["iteracoes_critica"] >= MAX_ITERACOES_CRITICA:
                 state["status"] = "revisar"
-                return state
+            else:
+                state["status"] = "em_revisao"
             return state
     return state
 
 
 def _decisao_pos_critica(state: EcoState) -> str:
+    if state.get("status") == "revisar":
+        return "entrega"
+    if state.get("status") == "em_revisao":
+        return "caracterizacao"
     return "entrega"
 
 

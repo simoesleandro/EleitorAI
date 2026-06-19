@@ -16,6 +16,7 @@ htmlcov/
 .worktrees/
 eleitorai_session.session
 *.session
+worker.pid
 
 *.egg-info/
 dist/
